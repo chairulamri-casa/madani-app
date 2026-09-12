@@ -604,6 +604,10 @@ function KepalaDashboard({ profile }) {
       alert("Laporan ini sudah pernah dijadikan Kasus Resmi sebelumnya (tidak bisa diulang, walau status diubah manual). Cek kasusnya di tab Manajemen Kasus.");
       return;
     }
+    if (p.status === "Ditolak") {
+      alert("Laporan ini berstatus Ditolak, tidak bisa langsung dijadikan Kasus Resmi. Ubah dulu statusnya ke Baru/Ditinjau kalau ternyata perlu ditindaklanjuti.");
+      return;
+    }
     if (!window.confirm("Jadikan laporan publik ini sebagai Kasus Resmi? Akan muncul di tab Manajemen Kasus untuk ditindaklanjuti.")) return;
     const { data, error } = await sb.from("madani_kasus").insert({
       madrasah_id: profile.id, tanggal: p.tanggal_kejadian || new Date().toISOString().slice(0,10),
@@ -916,6 +920,8 @@ function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskala
                     <td>
                       {p.kasus_id ? (
                         <span className="badge ok">✓ Sudah Jadi Kasus</span>
+                      ) : p.status === "Ditolak" ? (
+                        <span className="badge neutral">Ditolak — tidak dieskalasi</span>
                       ) : (
                         <button className="btn secondary" onClick={()=>handleEskalasi(p)} disabled={!!escalatingIds[p.id]}>
                           {escalatingIds[p.id] ? "Memproses..." : "Jadikan Kasus Resmi"}

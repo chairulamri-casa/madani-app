@@ -1,0 +1,17 @@
+{
+  "name": "MADANI - Madrasah Aman, Damai, dan Inklusif",
+  "short_name": "MADANI",
+  "description": "Aplikasi implementasi dan pemantauan Madrasah Aman, Damai, dan Inklusif - Kanwil Kemenag Provinsi Aceh",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f5",
+  "theme_color": "#0f5132",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

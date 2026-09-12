@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MADANI — Madrasah Aman, Damai, dan Inklusif</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0f5132" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="MADANI" />
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.1/dist/jspdf.plugin.autotable.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --primary:#0f5132; --primary-dark:#0a3d24; --primary-light:#e8f5e9;
+    --accent:#d4a017; --danger:#b3261e; --warn:#b06000; --ok:#0f5132;
+    --bg:#f6f7f5; --card:#ffffff; --border:#e2e5e1; --text:#1c2a22; --muted:#6b7a70;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .app{min-height:100vh;display:flex;flex-direction:column;}
+  header.topbar{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  header.topbar h1{font-size:18px;margin:0;font-weight:700;}
+  header.topbar .sub{font-size:12px;opacity:.85;}
+  header.topbar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;}
+  header.topbar button:hover{background:rgba(255,255,255,.28);}
+  main{flex:1;padding:20px;max-width:1100px;margin:0 auto;width:100%;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .card h2{margin-top:0;font-size:16px;color:var(--primary-dark);border-bottom:2px solid var(--primary-light);padding-bottom:8px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:var(--muted);}
+  input[type=text],input[type=password],input[type=number],input[type=date],select,textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:14px;background:#fff;color:var(--text);
+  }
+  textarea{min-height:70px;resize:vertical;}
+  .btn{background:var(--primary);color:#fff;border:none;padding:10px 18px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:600;}
+  .btn:hover{background:var(--primary-dark);}
+  .btn.secondary{background:#fff;color:var(--primary);border:1px solid var(--primary);}
+  .btn.danger{background:var(--danger);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .label{font-size:14px;max-width:75%;}
+  .switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s;}
+  .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+  input:checked + .slider{background:var(--primary);}
+  input:checked + .slider:before{transform:translateX(20px);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;}
+  th{background:var(--primary-light);color:var(--primary-dark);font-weight:700;position:sticky;top:0;}
+  tr:hover{background:#fafafa;}
+  .table-wrap{overflow-x:auto;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .badge.ok{background:#e6f4ea;color:var(--ok);}
+  .badge.warn{background:#fff4e0;color:var(--warn);}
+  .badge.danger{background:#fdeceb;color:var(--danger);}
+  .badge.neutral{background:#eef0ee;color:var(--muted);}
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:20px;}
+  .login-card{background:#fff;border-radius:16px;padding:32px;max-width:400px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+  .login-card h1{color:var(--primary-dark);margin:0 0 4px;font-size:22px;}
+  .login-card .tagline{color:var(--muted);font-size:13px;margin-bottom:20px;}
+  .role-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--bg);padding:4px;border-radius:8px;}
+  .role-tabs button{flex:1;padding:8px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);}
+  .role-tabs button.active{background:var(--primary);color:#fff;}
+  .error-msg{background:#fdeceb;color:var(--danger);padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:12px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:6px;}
+  .stat-box{background:var(--primary-light);border-radius:10px;padding:14px;text-align:center;}
+  .stat-box .num{font-size:24px;font-weight:800;color:var(--primary-dark);}
+  .stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+  .nav-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .nav-tabs button{padding:8px 16px;border:1px solid var(--border);background:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);}
+  .nav-tabs button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .setup-note{background:#fff4e0;border:1px solid #f0c36d;color:#7a5200;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;}
+  .footer-note{text-align:center;color:var(--muted);font-size:11px;padding:16px;}
+  select[multiple]{height:auto;}
+  .small-muted{font-size:12px;color:var(--muted);}
+  .student-wrap{min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;padding:16px;}
+  .student-card{background:#fff;border-radius:18px;padding:28px 22px;max-width:480px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+  .student-card h1{color:var(--primary-dark);font-size:20px;margin:0 0 4px;text-align:center;}
+  .student-card .sub{color:var(--muted);font-size:13px;text-align:center;margin-bottom:20px;}
+  .qitem{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+  .qitem .qtext{font-size:14px;margin-bottom:10px;font-weight:600;}
+  .yn-btns{display:flex;gap:10px;}
+  .yn-btns button{flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);background:#fff;font-weight:700;cursor:pointer;font-size:14px;}
+  .yn-btns button.yes.selected{background:#e6f4ea;border-color:var(--ok);color:var(--ok);}
+  .yn-btns button.no.selected{background:#fdeceb;border-color:var(--danger);color:var(--danger);}
+  .thanks-screen{text-align:center;padding:30px 10px;}
+  .thanks-screen .icon{font-size:52px;margin-bottom:10px;}
+  .session-box{background:var(--primary-light);border-radius:12px;padding:18px;text-align:center;margin-bottom:14px;}
+  .session-box .kode{font-size:32px;font-weight:800;letter-spacing:4px;color:var(--primary-dark);margin:8px 0;}
+  .session-box img{margin-top:10px;border-radius:8px;border:1px solid var(--border);}
+  .link-box{background:#fff;border:1px dashed var(--border);border-radius:8px;padding:8px 12px;font-size:12px;word-break:break-all;color:var(--primary-dark);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+
+// =========================================================================
+// KONFIGURASI SUPABASE — isi dengan project "Amanah" milik Anda
+// =========================================================================
+const SUPABASE_URL = "https://djnbttyjyzknujrepdfe.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2NM4R5w9VxxHITH8GZ642w_ADTYV1sW";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const KABKOTA_ACEH = [
+  "Kota Banda Aceh","Kota Sabang","Kota Langsa","Kota Lhokseumawe","Kota Subulussalam",
+  "Aceh Besar","Aceh Barat","Aceh Barat Daya","Aceh Jaya","Aceh Selatan",
+  "Aceh Singkil","Aceh Tamiang","Aceh Tengah","Aceh Tenggara","Aceh Timur",
+  "Aceh Utara","Bener Meriah","Bireuen","Gayo Lues","Nagan Raya",
+  "Pidie","Pidie Jaya","Simeulue",
+];
+
+const SURVEI_QUESTIONS = [
+  "Merasa aman berada di lingkungan madrasah",
+  "Guru memperlakukan dengan hormat, tidak membentak/menghina",
+  "Tidak pernah mengalami hukuman fisik dari guru/tendik",
+  "Tidak pernah diejek/dirundung/diintimidasi teman",
+  "Tahu harus melapor ke siapa bila ada masalah",
+  "Percaya laporan akan ditindaklanjuti & dirahasiakan",
+  "Disiplin ditegakkan lewat dialog/pembinaan, bukan kekerasan",
+  "Secara umum madrasah terasa ramah, inklusif, penuh kasih",
+];
+
+const KASUS_KATEGORI = ["Fisik","Verbal/Psikis","Perundungan","Kekerasan Seksual","Diskriminasi/Intoleransi","Lainnya"];
+
+function isConfigured(){
+  return !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON-KEY") && SUPABASE_URL.length > 20;
+}
+
+// ---------------------------------------------------------------------
+// SURVEI SISWA — halaman publik, tanpa login, diakses lewat ?survei=KODE
+// Cocok dibuka di HP masing-masing siswa ATAU 1 laptop kiosk bergiliran.
+// ---------------------------------------------------------------------
+function makeEmptyAnswers() {
+  const a = {};
+  for (let i = 1; i <= 8; i++) a["q" + i] = null;
+  return a;
+}
+
+function StudentSurveyView({ kode }) {
+  const [sesi, setSesi] = useState(undefined); // undefined=loading, null=not found
+  const [tokenRequired, setTokenRequired] = useState(null); // null=belum dicek
+  const [tokenValidated, setTokenValidated] = useState(false);
+  const [tokenInput, setTokenInput] = useState("");
+  const [tokenError, setTokenError] = useState("");
+  const [validatingToken, setValidatingToken] = useState(false);
+  const [answers, setAnswers] = useState(makeEmptyAnswers());
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await sb.from("madani_survei_sesi").select("*, madani_madrasah(nama)").eq("kode_sesi", kode).maybeSingle();
+      setSesi(data || null);
+    })();
+  }, [kode]);
+
+  useEffect(() => {
+    if (!sesi) return;
+    (async () => {
+      const { count } = await sb.from("madani_survei_token").select("id", { count: "exact", head: true }).eq("sesi_id", sesi.id);
+      setTokenRequired((count || 0) > 0);
+    })();
+  }, [sesi]);
+
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => {
+      setDone(false);
+      setAnswers(makeEmptyAnswers());
+      setFormKey(k => k + 1);
+      setTokenValidated(false);
+      setTokenInput("");
+      setTokenError("");
+    }, 4000); // kiosk mode: reset otomatis setelah 4 detik untuk siswa berikutnya
+    return () => clearTimeout(t);
+  }, [done]);
+
+  const allAnswered = Object.values(answers).every(v => v !== null);
+
+  async function submitToken(e) {
+    e.preventDefault();
+    if (!tokenInput.trim()) return;
+    setTokenError(""); setValidatingToken(true);
+    const t = tokenInput.trim().toUpperCase();
+    // update atomik: hanya berhasil kalau used_at masih null (mencegah 2 orang pakai token sama bersamaan)
+    const { data, error } = await sb.from("madani_survei_token")
+      .update({ used_at: new Date().toISOString() })
+      .eq("sesi_id", sesi.id).eq("token", t).is("used_at", null)
+      .select();
+    if (error) { setValidatingToken(false); setTokenError("Terjadi kesalahan: " + error.message); return; }
+    if (data && data.length > 0) { setValidatingToken(false); setTokenValidated(true); return; }
+    const { data: check } = await sb.from("madani_survei_token").select("used_at").eq("sesi_id", sesi.id).eq("token", t).maybeSingle();
+    setValidatingToken(false);
+    setTokenError(!check ? "Token tidak ditemukan. Periksa kembali penulisannya." : "Token ini sudah pernah dipakai dan tidak bisa dipakai lagi.");
+  }
+
+  async function submit() {
+    if (!allAnswered || submitting) return;
+    setSubmitting(true);
+    const payload = { sesi_id: sesi.id };
+    for (let i = 1; i <= 8; i++) payload["q" + i] = answers["q" + i];
+    const { error } = await sb.from("madani_survei_respon").insert(payload);
+    setSubmitting(false);
+    if (!error) setDone(true);
+  }
+
+  if (sesi === undefined || tokenRequired === null) {
+    return <div className="student-wrap"><div className="student-card">Memuat...</div></div>;
+  }
+  if (sesi === null) {
+    return (
+      <div className="student-wrap"><div className="student-card">
+        <h1>Kode Tidak Ditemukan</h1>
+        <p className="sub">Kode sesi survei tidak valid. Minta wali kelas menampilkan ulang kode/link-nya.</p>
+      </div></div>
+    );
+  }
+  if (sesi.status !== "open") {
+    return (
+      <div className="student-wrap"><div className="student-card">
+        <h1>Sesi Sudah Ditutup</h1>
+        <p className="sub">Survei untuk kelas ini sudah selesai. Terima kasih.</p>
+      </div></div>
+    );
+  }
+  if (done) {
+    return (
+      <div className="student-wrap"><div className="student-card">
+        <div className="thanks-screen">
+          <div className="icon">✅</div>
+          <h1>Terima Kasih!</h1>
+          <p className="sub">Jawabanmu sudah tersimpan secara anonim.<br/>Silakan berikan HP/laptop ke teman berikutnya.</p>
+        </div>
+      </div></div>
+    );
+  }
+
+  if (tokenRequired && !tokenValidated) {
+    return (
+      <div className="student-wrap">
+        <div className="student-card" key={formKey}>
+          <h1>Masukkan Token</h1>
+          <div className="sub">{sesi.madani_madrasah?.nama} — Kelas {sesi.kelas}<br/>Lihat token di slip kertas yang dibagikan wali kelas.</div>
+          {tokenError && <div className="error-msg">{tokenError}</div>}
+          <form onSubmit={submitToken}>
+            <input
+              type="text" value={tokenInput}
+              onChange={e=>setTokenInput(e.target.value.toUpperCase())}
+              placeholder="contoh: 3F7K2Q" maxLength={8} required
+              style={{textAlign:"center",fontSize:22,fontFamily:"monospace",letterSpacing:3,textTransform:"uppercase"}}
+            />
+            <button className="btn" type="submit" style={{width:"100%",marginTop:14}} disabled={validatingToken}>
+              {validatingToken ? "Memeriksa..." : "Lanjut"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="student-wrap">
+      <div className="student-card" key={formKey}>
+        <h1>Kuesioner Rasa Aman</h1>
+        <div className="sub">{sesi.madani_madrasah?.nama} — Kelas {sesi.kelas}<br/>Jawaban kamu ANONIM, tidak perlu tulis nama.</div>
+        {SURVEI_QUESTIONS.map((q, i) => {
+          const key = "q" + (i + 1);
+          return (
+            <div className="qitem" key={key}>
+              <div className="qtext">{i + 1}. {q}</div>
+              <div className="yn-btns">
+                <button type="button" className={"yes" + (answers[key] === true ? " selected" : "")} onClick={() => setAnswers(a => ({ ...a, [key]: true }))}>Ya</button>
+                <button type="button" className={"no" + (answers[key] === false ? " selected" : "")} onClick={() => setAnswers(a => ({ ...a, [key]: false }))}>Tidak</button>
+              </div>
+            </div>
+          );
+        })}
+        <button className="btn" style={{ width: "100%", marginTop: 10 }} disabled={!allAnswered || submitting} onClick={submit}>
+          {submitting ? "Mengirim..." : allAnswered ? "Kirim Jawaban" : "Jawab semua pertanyaan dulu"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// PENGADUAN PUBLIK — halaman publik permanen, tanpa login, diakses lewat
+// ?lapor=KODE (kode berbeda dari kode akses login Kepala Madrasah).
+// ---------------------------------------------------------------------
+function PublicComplaintView({ kode }) {
+  const [madrasah, setMadrasah] = useState(undefined); // undefined=loading, null=not found
+  const [form, setForm] = useState({ tanggal_kejadian: "", kategori: KASUS_KATEGORI[0], deskripsi: "", kontak_pelapor: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await sb.from("madani_madrasah").select("id, nama, kab_kota").eq("kode_lapor", kode).maybeSingle();
+      setMadrasah(data || null);
+    })();
+  }, [kode]);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.deskripsi.trim()) { setErr("Mohon isi uraian kejadian, walau singkat."); return; }
+    setErr(""); setSubmitting(true);
+    const { error } = await sb.from("madani_pengaduan_publik").insert({
+      madrasah_id: madrasah.id,
+      tanggal_kejadian: form.tanggal_kejadian || null,
+      kategori: form.kategori,
+      deskripsi: form.deskripsi.trim(),
+      kontak_pelapor: form.kontak_pelapor.trim() || null,
+    });
+    setSubmitting(false);
+    if (error) setErr("Gagal mengirim: " + error.message);
+    else setDone(true);
+  }
+
+  if (madrasah === undefined) return <div className="student-wrap"><div className="student-card">Memuat...</div></div>;
+  if (madrasah === null) {
+    return (
+      <div className="student-wrap"><div className="student-card">
+        <h1>Kode Tidak Ditemukan</h1>
+        <p className="sub">Link/kode pengaduan ini tidak valid. Pastikan alamat yang dibuka sesuai dengan yang tertera di poster madrasah.</p>
+      </div></div>
+    );
+  }
+  if (done) {
+    return (
+      <div className="student-wrap"><div className="student-card">
+        <div className="thanks-screen">
+          <div className="icon">✅</div>
+          <h1>Laporan Diterima</h1>
+          <p className="sub">Terima kasih sudah berani melapor. Laporan ini akan ditinjau oleh pihak madrasah dan Kanwil Kemenag.<br/><br/>Jika kamu/anak dalam bahaya SEGERA, hubungi guru, kepala madrasah, atau pihak berwajib secara langsung — jangan menunggu tindak lanjut laporan ini.</p>
+        </div>
+      </div></div>
+    );
+  }
+
+  return (
+    <div className="student-wrap">
+      <div className="student-card">
+        <h1>Pengaduan Kekerasan/Perundungan</h1>
+        <div className="sub">{madrasah.nama} — {madrasah.kab_kota}<br/>Laporan ini bisa dikirim ANONIM. Kontak di bawah bersifat OPSIONAL.</div>
+        {err && <div className="error-msg">{err}</div>}
+        <form onSubmit={submit}>
+          <div style={{marginBottom:12}}>
+            <label>Kategori Kejadian</label>
+            <select value={form.kategori} onChange={e=>setForm(f=>({...f,kategori:e.target.value}))}>
+              {KASUS_KATEGORI.map(k=><option key={k} value={k}>{k}</option>)}
+            </select>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label>Tanggal Kejadian (opsional, kalau ingat)</label>
+            <input type="date" value={form.tanggal_kejadian} onChange={e=>setForm(f=>({...f,tanggal_kejadian:e.target.value}))} />
+          </div>
+          <div style={{marginBottom:12}}>
+            <label>Ceritakan Kejadiannya</label>
+            <textarea value={form.deskripsi} onChange={e=>setForm(f=>({...f,deskripsi:e.target.value}))} placeholder="Tulis apa yang terjadi, kapan, di mana (kalau ingat)..." style={{minHeight:110}} required />
+          </div>
+          <div style={{marginBottom:16}}>
+            <label>Kontak Kamu (opsional — isi kalau bersedia dihubungi untuk tindak lanjut)</label>
+            <input type="text" value={form.kontak_pelapor} onChange={e=>setForm(f=>({...f,kontak_pelapor:e.target.value}))} placeholder="Nama & nomor HP, atau kosongkan" />
+          </div>
+          <button className="btn" type="submit" style={{width:"100%"}} disabled={submitting}>{submitting?"Mengirim...":"Kirim Laporan"}</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// LOGIN
+// ---------------------------------------------------------------------
+function LoginScreen({ onLogin }) {
+  const [role, setRole] = useState("kepala"); // kepala | guru | admin
+  const [kode, setKode] = useState("");
+  const [pin, setPin] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setErr(""); setLoading(true);
+    try {
+      if (role === "admin") {
+        const { data, error } = await sb.from("madani_admin").select("*").eq("username", kode).eq("pin", pin).maybeSingle();
+        if (error) throw error;
+        if (!data) { setErr("Username atau PIN admin salah."); return; }
+        onLogin({ role: "admin", profile: data });
+      } else if (role === "kepala") {
+        const { data, error } = await sb.from("madani_madrasah").select("*").eq("kode_akses", kode).eq("pin", pin).maybeSingle();
+        if (error) throw error;
+        if (!data) { setErr("Kode akses atau PIN madrasah salah."); return; }
+        onLogin({ role: "kepala", profile: data });
+      } else {
+        const { data, error } = await sb.from("madani_guru").select("*, madani_madrasah(*)").eq("kode_akses", kode).eq("pin", pin).maybeSingle();
+        if (error) throw error;
+        if (!data) { setErr("Kode akses atau PIN guru/wali kelas salah."); return; }
+        onLogin({ role: "guru", profile: data });
+      }
+    } catch (e2) {
+      setErr("Gagal terhubung ke server: " + e2.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="login-wrap">
+      <div className="login-card">
+        <h1>MADANI</h1>
+        <div className="tagline">Madrasah Aman, Damai, dan Inklusif — Kanwil Kemenag Provinsi Aceh</div>
+        {!isConfigured() && (
+          <div className="setup-note">
+            ⚠️ Supabase belum dikonfigurasi. Isi <code>SUPABASE_URL</code> dan <code>SUPABASE_ANON_KEY</code> di bagian atas file ini.
+          </div>
+        )}
+        <div className="role-tabs">
+          <button className={role==="kepala"?"active":""} onClick={()=>setRole("kepala")} type="button">Kepala Madrasah</button>
+          <button className={role==="guru"?"active":""} onClick={()=>setRole("guru")} type="button">Wali Kelas</button>
+          <button className={role==="admin"?"active":""} onClick={()=>setRole("admin")} type="button">Admin Kanwil</button>
+        </div>
+        {err && <div className="error-msg">{err}</div>}
+        <form onSubmit={handleLogin}>
+          <label>{role === "admin" ? "Username" : "Kode Akses"}</label>
+          <input type="text" value={kode} onChange={e=>setKode(e.target.value)} required style={{marginBottom:12}} />
+          <label>PIN</label>
+          <input type="password" value={pin} onChange={e=>setPin(e.target.value)} required style={{marginBottom:18}} />
+          <button className="btn" type="submit" style={{width:"100%"}} disabled={loading}>
+            {loading ? "Memeriksa..." : "Masuk"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// SHARED: status badge
+// ---------------------------------------------------------------------
+function statusFromChecklist(c) {
+  if (!c) return "Belum Dimulai";
+  const flags = [c.martabat, c.disiplin_tanpa_kekerasan, c.kbc_panca_cinta, c.evaluasi_berkala, c.pengaduan_aktif, c.tppk_dibentuk];
+  const yes = flags.filter(Boolean).length;
+  if (yes === 6) return "Lengkap";
+  if (yes === 0) return "Belum Dimulai";
+  return "Sebagian";
+}
+function StatusBadge({ status }) {
+  const cls = status === "Lengkap" ? "ok" : status === "Sebagian" ? "warn" : "danger";
+  return <span className={"badge " + cls}>{status}</span>;
+}
+
+// ---------------------------------------------------------------------
+// UPLOAD BERKAS SK TPPK — langsung ke Supabase Storage, tersimpan seketika
+// ---------------------------------------------------------------------
+function SkUploader({ checklist, setChecklist, madrasahId }) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") { setErr("Hanya berkas PDF yang diterima."); e.target.value = ""; return; }
+    if (file.size > 2 * 1024 * 1024) { setErr("Ukuran file maksimal 2MB. Kompres dulu PDF-nya (misalnya lewat ilovepdf.com)."); e.target.value = ""; return; }
+    setErr(""); setUploading(true);
+    const ext = "pdf";
+    const path = `tppk/${madrasahId}-${Date.now()}.${ext}`;
+    const { error: upErr } = await sb.storage.from("madani-berkas").upload(path, file);
+    if (upErr) {
+      setErr("Gagal unggah: " + upErr.message);
+      setUploading(false);
+      return;
+    }
+    const { data: urlData } = sb.storage.from("madani-berkas").getPublicUrl(path);
+    const newChecklist = { ...checklist, tppk_file_url: urlData.publicUrl, tppk_file_nama: file.name };
+    setChecklist(newChecklist);
+    // simpan langsung agar berkas tidak hilang jika lupa klik "Simpan Checklist"
+    await sb.from("madani_checklist").upsert(
+      { ...newChecklist, madrasah_id: madrasahId, updated_at: new Date().toISOString() },
+      { onConflict: "madrasah_id" }
+    );
+    setUploading(false);
+  }
+
+  return (
+    <div>
+      <input type="file" accept="application/pdf" onChange={handleFile} disabled={uploading} />
+      {uploading && <div className="small-muted">Mengunggah...</div>}
+      {err && <div className="error-msg" style={{marginTop:8}}>{err}</div>}
+      {checklist.tppk_file_url && !uploading && (
+        <div className="small-muted" style={{marginTop:6}}>
+          ✅ Sudah diunggah: <a href={checklist.tppk_file_url} target="_blank" rel="noreferrer">{checklist.tppk_file_nama || "lihat berkas"}</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// KEPALA MADRASAH DASHBOARD
+// ---------------------------------------------------------------------
+function KepalaDashboard({ profile }) {
+  const [tab, setTab] = useState("checklist");
+  const [checklist, setChecklist] = useState(null);
+  const [sesiList, setSesiList] = useState([]);
+  const [responList, setResponList] = useState([]);
+  const [kasusList, setKasusList] = useState([]);
+  const [pengaduanList, setPengaduanList] = useState([]);
+  const [kodeLapor, setKodeLapor] = useState(profile.kode_lapor);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [{ data: ck }, { data: sesi }, { data: ks }, { data: pengaduan }] = await Promise.all([
+      sb.from("madani_checklist").select("*").eq("madrasah_id", profile.id).maybeSingle(),
+      sb.from("madani_survei_sesi").select("*").eq("madrasah_id", profile.id).order("created_at", { ascending: false }),
+      sb.from("madani_kasus").select("*").eq("madrasah_id", profile.id).order("tanggal", { ascending: false }),
+      sb.from("madani_pengaduan_publik").select("*").eq("madrasah_id", profile.id).order("created_at", { ascending: false }),
+    ]);
+    setChecklist(ck || {
+      madrasah_id: profile.id, sosialisasi_dilaksanakan: false, tanggal_sosialisasi: "",
+      martabat: false, disiplin_tanpa_kekerasan: false, kbc_panca_cinta: false,
+      evaluasi_berkala: false, pengaduan_aktif: false, catatan: "",
+      tppk_dibentuk: false, tppk_no_sk: "", tppk_tanggal_sk: "", tppk_file_url: "", tppk_file_nama: "",
+    });
+    setSesiList(sesi || []);
+    if (sesi && sesi.length) {
+      const { data: respon } = await sb.from("madani_survei_respon").select("*").in("sesi_id", sesi.map(s => s.id));
+      setResponList(respon || []);
+    } else {
+      setResponList([]);
+    }
+    setKasusList(ks || []);
+    setPengaduanList(pengaduan || []);
+    setLoading(false);
+  }, [profile.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function saveChecklist() {
+    setSaving(true); setSaveMsg("");
+    const payload = { ...checklist, madrasah_id: profile.id, updated_at: new Date().toISOString() };
+    const { error } = await sb.from("madani_checklist").upsert(payload, { onConflict: "madrasah_id" });
+    setSaving(false);
+    setSaveMsg(error ? "Gagal menyimpan: " + error.message : "Tersimpan.");
+    setTimeout(() => setSaveMsg(""), 2500);
+  }
+
+  const toggle = (key) => setChecklist(c => ({ ...c, [key]: !c[key] }));
+
+  const surveiAgg = useMemo(() => {
+    const n = responList.length;
+    const totalYa = responList.reduce((s, r) => s + [r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8].filter(Boolean).length, 0);
+    const pct = n > 0 ? (totalYa / (n * 8)) * 100 : 0;
+    const kelasDenganRespon = new Set(
+      sesiList.filter(s => responList.some(r => r.sesi_id === s.id)).map(s => s.kelas)
+    );
+    return { totalSiswa: n, pct: pct.toFixed(1), jumlahKelas: kelasDenganRespon.size };
+  }, [responList, sesiList]);
+
+  async function addKasus(form) {
+    const { error } = await sb.from("madani_kasus").insert({ ...form, madrasah_id: profile.id });
+    if (!error) load();
+    return error;
+  }
+  async function updateKasusStatus(id, status) {
+    await sb.from("madani_kasus").update({ status }).eq("id", id);
+    load();
+  }
+
+  async function updatePengaduanStatus(id, status) {
+    await sb.from("madani_pengaduan_publik").update({ status }).eq("id", id);
+    load();
+  }
+  async function eskalasiKeKasus(p) {
+    if (!window.confirm("Jadikan laporan publik ini sebagai Kasus Resmi? Akan muncul di tab Manajemen Kasus untuk ditindaklanjuti.")) return;
+    const { error } = await sb.from("madani_kasus").insert({
+      madrasah_id: profile.id, tanggal: p.tanggal_kejadian || new Date().toISOString().slice(0,10),
+      kategori: p.kategori, status: "Baru",
+      catatan_penanganan: "Berasal dari pengaduan publik: " + p.deskripsi.slice(0, 200),
+    });
+    if (!error) { await sb.from("madani_pengaduan_publik").update({ status: "Ditindaklanjuti" }).eq("id", p.id); load(); }
+  }
+
+  async function regenerateKodeLapor() {
+    if (!window.confirm("Buat kode pengaduan baru? Poster/QR lama tidak akan berfungsi lagi setelah ini.")) return;
+    const newKode = genRandomCode("LAPOR", 7);
+    const { error } = await sb.from("madani_madrasah").update({ kode_lapor: newKode }).eq("id", profile.id);
+    if (!error) { setKodeLapor(newKode); alert("Kode pengaduan baru: " + newKode + "\n\nCetak ulang poster dengan link/QR yang baru."); }
+  }
+
+  if (loading) return <div className="card">Memuat data...</div>;
+
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-box"><div className="num"><StatusBadge status={statusFromChecklist(checklist)} /></div><div className="lbl">Status Implementasi</div></div>
+        <div className="stat-box"><div className="num">{surveiAgg.jumlahKelas}</div><div className="lbl">Kelas Sudah Disurvei</div></div>
+        <div className="stat-box"><div className="num">{surveiAgg.pct}%</div><div className="lbl">Rata-rata Rasa Aman</div></div>
+        <div className="stat-box"><div className="num">{kasusList.filter(k=>k.status!=="Selesai").length}</div><div className="lbl">Kasus Aktif</div></div>
+        <div className="stat-box"><div className="num">{pengaduanList.filter(p=>p.status==="Baru").length}</div><div className="lbl">Pengaduan Publik Baru</div></div>
+      </div>
+
+      <div className="nav-tabs">
+        <button className={tab==="checklist"?"active":""} onClick={()=>setTab("checklist")}>Checklist Kepatuhan</button>
+        <button className={tab==="survei"?"active":""} onClick={()=>setTab("survei")}>Rekap Survei Kelas</button>
+        <button className={tab==="kasus"?"active":""} onClick={()=>setTab("kasus")}>Manajemen Kasus</button>
+        <button className={tab==="pengaduan"?"active":""} onClick={()=>setTab("pengaduan")}>Pengaduan Publik</button>
+        <button className={tab==="guru"?"active":""} onClick={()=>setTab("guru")}>Kelola Wali Kelas</button>
+      </div>
+
+      {tab === "checklist" && (
+        <div className="card">
+          <h2>Checklist Kepatuhan — {profile.nama}</h2>
+          <div className="toggle-row">
+            <div className="label">Sosialisasi SE sudah dilaksanakan ke seluruh guru?</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.sosialisasi_dilaksanakan} onChange={()=>toggle("sosialisasi_dilaksanakan")} /><span className="slider"></span></label>
+          </div>
+          {checklist.sosialisasi_dilaksanakan && (
+            <div style={{marginBottom:14}}>
+              <label>Tanggal Sosialisasi</label>
+              <input type="date" value={checklist.tanggal_sosialisasi || ""} onChange={e=>setChecklist(c=>({...c, tanggal_sosialisasi: e.target.value}))} />
+            </div>
+          )}
+          <div className="toggle-row">
+            <div className="label">a) Martabat & hak peserta didik dihormati</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.martabat} onChange={()=>toggle("martabat")} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <div className="label">b) Disiplin ditegakkan tanpa kekerasan (keteladanan, dialog, pembinaan)</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.disiplin_tanpa_kekerasan} onChange={()=>toggle("disiplin_tanpa_kekerasan")} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <div className="label">c) Kurikulum Berbasis Cinta (KBC) & Panca Cinta diperkuat</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.kbc_panca_cinta} onChange={()=>toggle("kbc_panca_cinta")} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <div className="label">d) Evaluasi berkala dilaksanakan (survei/forum dialog/pemantauan)</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.evaluasi_berkala} onChange={()=>toggle("evaluasi_berkala")} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <div className="label">Mekanisme pengaduan aktif & dijaga kerahasiaannya</div>
+            <label className="switch"><input type="checkbox" checked={!!checklist.pengaduan_aktif} onChange={()=>toggle("pengaduan_aktif")} /><span className="slider"></span></label>
+          </div>
+
+          <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid var(--primary-light)"}}>
+            <div style={{fontWeight:700,fontSize:14,color:"var(--primary-dark)",marginBottom:4}}>Kepatuhan Tambahan: Pembentukan TPPK</div>
+            <div className="small-muted" style={{marginBottom:10}}>Sesuai Permendikbudristek No. 46/2023 — Tim Pencegahan dan Penanganan Kekerasan (TPPK) wajib dibentuk dengan SK Kepala Madrasah.</div>
+            <div className="toggle-row">
+              <div className="label">TPPK sudah dibentuk di madrasah ini?</div>
+              <label className="switch"><input type="checkbox" checked={!!checklist.tppk_dibentuk} onChange={()=>toggle("tppk_dibentuk")} /><span className="slider"></span></label>
+            </div>
+            {checklist.tppk_dibentuk && (
+              <div style={{marginTop:10}}>
+                <div className="grid2">
+                  <div>
+                    <label>Nomor SK Pembentukan TPPK</label>
+                    <input type="text" value={checklist.tppk_no_sk || ""} onChange={e=>setChecklist(c=>({...c, tppk_no_sk: e.target.value}))} placeholder="contoh: 021/SK-TPPK/2026" />
+                  </div>
+                  <div>
+                    <label>Tanggal SK</label>
+                    <input type="date" value={checklist.tppk_tanggal_sk || ""} onChange={e=>setChecklist(c=>({...c, tppk_tanggal_sk: e.target.value}))} />
+                  </div>
+                </div>
+                <div style={{marginTop:10}}>
+                  <label>Unggah Berkas SK (PDF saja, maks 2MB)</label>
+                  <SkUploader checklist={checklist} setChecklist={setChecklist} madrasahId={profile.id} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{marginTop:14}}>
+            <label>Catatan</label>
+            <textarea value={checklist.catatan || ""} onChange={e=>setChecklist(c=>({...c, catatan: e.target.value}))} />
+          </div>
+          <div style={{marginTop:16,display:"flex",gap:10,alignItems:"center"}}>
+            <button className="btn" onClick={saveChecklist} disabled={saving}>{saving ? "Menyimpan..." : "Simpan Checklist"}</button>
+            {saveMsg && <span className="small-muted">{saveMsg}</span>}
+          </div>
+        </div>
+      )}
+
+      {tab === "survei" && (
+        <div className="card">
+          <h2>Rekap Survei Rasa Aman — Per Sesi Kelas</h2>
+          <p className="small-muted">Data ini berasal dari jawaban langsung siswa (anonim), bukan input manual wali kelas.</p>
+          {sesiList.length === 0 ? <p className="small-muted">Belum ada sesi survei dibuat oleh wali kelas.</p> : (
+            <div className="table-wrap">
+              <table>
+                <thead><tr><th>Kelas</th><th>Tanggal</th><th>Kode Sesi</th><th>Status</th><th>Jml Responden</th><th>% Rasa Aman</th></tr></thead>
+                <tbody>
+                  {sesiList.map(s => {
+                    const rs = responList.filter(r => r.sesi_id === s.id);
+                    const totalYa = rs.reduce((sum, r) => sum + [r.q1,r.q2,r.q3,r.q4,r.q5,r.q6,r.q7,r.q8].filter(Boolean).length, 0);
+                    const pct = rs.length > 0 ? ((totalYa / (rs.length * 8)) * 100).toFixed(1) : "-";
+                    return (
+                      <tr key={s.id}>
+                        <td>{s.kelas}</td>
+                        <td>{s.tanggal}</td>
+                        <td>{s.kode_sesi}</td>
+                        <td><span className={"badge " + (s.status === "open" ? "warn" : "ok")}>{s.status === "open" ? "Berjalan" : "Selesai"}</span></td>
+                        <td>{rs.length}</td>
+                        <td>{pct === "-" ? "-" : pct + "%"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "kasus" && <KasusPanel kasusList={kasusList} onAdd={addKasus} onUpdateStatus={updateKasusStatus} />}
+      {tab === "pengaduan" && (
+        <PengaduanPublikPanel
+          profile={{ ...profile, kode_lapor: kodeLapor }}
+          pengaduanList={pengaduanList}
+          onUpdateStatus={updatePengaduanStatus}
+          onEskalasi={eskalasiKeKasus}
+          onRegenerate={regenerateKodeLapor}
+        />
+      )}
+      {tab === "guru" && <KelolaWaliKelasPanel profile={profile} />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// KEPALA MADRASAH: KELOLA WALI KELAS SENDIRI (tanpa lewat Admin Kanwil)
+// ---------------------------------------------------------------------
+function KelolaWaliKelasPanel({ profile }) {
+  const [guruList, setGuruList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const emptyForm = { nama: "", kelas: "", kode_akses: genRandomCode("GURU", 6), pin: genPin() };
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await sb.from("madani_guru").select("*").eq("madrasah_id", profile.id).order("nama");
+    setGuruList(data || []);
+    setLoading(false);
+  }, [profile.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function submitNew(e) {
+    e.preventDefault();
+    setSaving(true); setMsg("");
+    const { error } = await sb.from("madani_guru").insert({ ...form, madrasah_id: profile.id });
+    setSaving(false);
+    if (error) {
+      setMsg("Gagal: " + error.message);
+    } else {
+      setMsg(`Tersimpan. Kode akses: ${form.kode_akses} — PIN: ${form.pin} (catat/salin, berikan ke wali kelas terkait)`);
+      setForm({ ...emptyForm, kode_akses: genRandomCode("GURU", 6), pin: genPin() });
+      load();
+    }
+  }
+
+  async function resetPin(g) {
+    if (!window.confirm(`Reset PIN untuk "${g.nama}"?`)) return;
+    const newPin = genPin();
+    const { error } = await sb.from("madani_guru").update({ pin: newPin }).eq("id", g.id);
+    if (!error) { alert(`PIN baru untuk ${g.nama}: ${newPin}\n\nSampaikan ke wali kelas — PIN lama tidak berlaku lagi.`); load(); }
+  }
+
+  async function hapus(g) {
+    if (!window.confirm(`Hapus akun wali kelas "${g.nama}"? Sesi survei yang pernah dibuat tetap tersimpan.`)) return;
+    const { error } = await sb.from("madani_guru").delete().eq("id", g.id);
+    if (!error) load();
+  }
+
+  if (loading) return <div className="card">Memuat...</div>;
+
+  return (
+    <div>
+      <div className="card">
+        <h2>+ Tambah Wali Kelas Baru</h2>
+        <p className="small-muted">Wali kelas yang ditambahkan di sini otomatis terdaftar untuk madrasah "{profile.nama}" — tidak perlu minta Kanwil daftarkan satu-satu.</p>
+        <form onSubmit={submitNew}>
+          <div className="grid2">
+            <div><label>Nama Guru</label><input type="text" value={form.nama} onChange={e=>setForm(f=>({...f,nama:e.target.value}))} required /></div>
+            <div><label>Kelas (contoh: IV-A)</label><input type="text" value={form.kelas} onChange={e=>setForm(f=>({...f,kelas:e.target.value}))} required /></div>
+          </div>
+          <div className="grid2" style={{marginTop:12}}>
+            <div><label>Kode Akses (otomatis, boleh diubah)</label><input type="text" value={form.kode_akses} onChange={e=>setForm(f=>({...f,kode_akses:e.target.value}))} required /></div>
+            <div><label>PIN (otomatis, boleh diubah)</label><input type="text" value={form.pin} onChange={e=>setForm(f=>({...f,pin:e.target.value}))} required /></div>
+          </div>
+          <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center"}}>
+            <button className="btn" type="submit" disabled={saving}>{saving?"Menyimpan...":"Simpan Wali Kelas"}</button>
+            {msg && <span className="small-muted">{msg}</span>}
+          </div>
+        </form>
+      </div>
+
+      <div className="card">
+        <h2>Daftar Wali Kelas ({guruList.length})</h2>
+        {guruList.length === 0 ? <p className="small-muted">Belum ada wali kelas terdaftar.</p> : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Nama</th><th>Kelas</th><th>Kode Akses</th><th>PIN</th><th>Aksi</th></tr></thead>
+              <tbody>
+                {guruList.map(g => (
+                  <tr key={g.id}>
+                    <td>{g.nama}</td>
+                    <td>{g.kelas}</td>
+                    <td>{g.kode_akses}</td>
+                    <td>{g.pin}</td>
+                    <td>
+                      <button className="btn secondary" onClick={()=>resetPin(g)}>Reset PIN</button>{" "}
+                      <button className="btn danger" onClick={()=>hapus(g)}>Hapus</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function complaintUrl(kode) {
+  const base = window.location.origin + window.location.pathname;
+  return base + "?lapor=" + kode;
+}
+
+function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskalasi, onRegenerate }) {
+  const url = complaintUrl(profile.kode_lapor);
+  return (
+    <div>
+      <div className="card">
+        <h2>Poster Pengaduan Publik</h2>
+        <p className="small-muted">Cetak & tempel di mading/papan pengumuman madrasah, supaya orang tua, siswa, atau masyarakat bisa melapor kapan saja tanpa perlu login.</p>
+        <div className="session-box">
+          <div className="small-muted">Link/kode permanen untuk {profile.nama}</div>
+          <div className="kode">{profile.kode_lapor || "belum ada — jalankan migrasi schema_pengaduan_publik.sql"}</div>
+          {profile.kode_lapor && (
+            <>
+              <div className="link-box">{url}</div>
+              <img src={"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(url)} alt="QR pengaduan" width="200" height="200" />
+              <div style={{marginTop:12}}>
+                <button className="btn danger" onClick={onRegenerate}>Buat Ulang Kode (kalau poster lama bocor/disalahgunakan)</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>Laporan Masuk ({pengaduanList.length})</h2>
+        {pengaduanList.length === 0 ? <p className="small-muted">Belum ada laporan masuk lewat saluran publik.</p> : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Tanggal Lapor</th><th>Kategori</th><th>Uraian</th><th>Kontak</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody>
+                {pengaduanList.map(p => (
+                  <tr key={p.id}>
+                    <td>{new Date(p.created_at).toLocaleDateString("id-ID")}</td>
+                    <td>{p.kategori}</td>
+                    <td style={{maxWidth:280}}>{p.deskripsi}</td>
+                    <td>{p.kontak_pelapor || <span className="small-muted">Anonim</span>}</td>
+                    <td>
+                      <select value={p.status} onChange={e=>onUpdateStatus(p.id, e.target.value)}>
+                        <option>Baru</option><option>Ditinjau</option><option>Ditindaklanjuti</option><option>Ditolak</option>
+                      </select>
+                    </td>
+                    <td>
+                      {p.status !== "Ditindaklanjuti" && (
+                        <button className="btn secondary" onClick={()=>onEskalasi(p)}>Jadikan Kasus Resmi</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KasusPanel({ kasusList, onAdd, onUpdateStatus }) {
+  const [form, setForm] = useState({ tanggal: new Date().toISOString().slice(0,10), kategori: KASUS_KATEGORI[0], catatan_penanganan: "" });
+  const [msg, setMsg] = useState("");
+  async function submit(e) {
+    e.preventDefault();
+    const error = await onAdd(form);
+    setMsg(error ? "Gagal: " + error.message : "Kasus tercatat.");
+    setForm({ tanggal: new Date().toISOString().slice(0,10), kategori: KASUS_KATEGORI[0], catatan_penanganan: "" });
+    setTimeout(()=>setMsg(""), 2500);
+  }
+  return (
+    <div>
+      <div className="card">
+        <h2>Catat Kasus Baru</h2>
+        <p className="small-muted">Catat hanya kategori & penanganan. Jangan cantumkan nama siswa/identitas — simpan detail identitas di berkas fisik/sistem terpisah yang lebih terjaga kerahasiaannya.</p>
+        <form onSubmit={submit}>
+          <div className="grid2">
+            <div><label>Tanggal Kejadian</label><input type="date" value={form.tanggal} onChange={e=>setForm(f=>({...f,tanggal:e.target.value}))} required /></div>
+            <div><label>Kategori</label>
+              <select value={form.kategori} onChange={e=>setForm(f=>({...f,kategori:e.target.value}))}>
+                {KASUS_KATEGORI.map(k=><option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{marginTop:12}}>
+            <label>Catatan Penanganan Awal</label>
+            <textarea value={form.catatan_penanganan} onChange={e=>setForm(f=>({...f,catatan_penanganan:e.target.value}))} />
+          </div>
+          <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center"}}>
+            <button className="btn" type="submit">Simpan Kasus</button>
+            {msg && <span className="small-muted">{msg}</span>}
+          </div>
+        </form>
+      </div>
+      <div className="card">
+        <h2>Daftar Kasus</h2>
+        {kasusList.length === 0 ? <p className="small-muted">Alhamdulillah, belum ada kasus tercatat.</p> : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Catatan</th><th>Status</th></tr></thead>
+              <tbody>
+                {kasusList.map(k=>(
+                  <tr key={k.id}>
+                    <td>{k.tanggal}</td>
+                    <td>{k.kategori}</td>
+                    <td>{k.catatan_penanganan}</td>
+                    <td>
+                      <select value={k.status} onChange={e=>onUpdateStatus(k.id, e.target.value)}>
+                        <option>Baru</option><option>Dalam Penanganan</option><option>Selesai</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// WALI KELAS DASHBOARD — kelola SESI survei (siswa yang mengisi langsung)
+// ---------------------------------------------------------------------
+function genKode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // tanpa karakter ambigu
+  let s = "";
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function surveyUrl(kode) {
+  const base = window.location.origin + window.location.pathname;
+  return base + "?survei=" + kode;
+}
+
+function genRandomCode(prefix, len) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return prefix ? prefix + "-" + s : s;
+}
+function genPin() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+function GuruDashboard({ profile }) {
+  const madrasah = profile.madani_madrasah;
+  const [sesiList, setSesiList] = useState([]);
+  const [responCount, setResponCount] = useState({}); // sesi_id -> {n, pct}
+  const [tokenList, setTokenList] = useState([]); // token utk sesi aktif
+  const [jumlahToken, setJumlahToken] = useState("");
+  const [generatingToken, setGeneratingToken] = useState(false);
+  const [periodeAktif, setPeriodeAktif] = useState(undefined); // undefined=loading, null=tidak ada
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const today = new Date().toISOString().slice(0,10);
+    const [{ data: sesi }, { data: periodes }] = await Promise.all([
+      sb.from("madani_survei_sesi").select("*").eq("guru_id", profile.id).order("created_at", { ascending: false }),
+      sb.from("madani_periode_survei").select("*").eq("is_active", true).lte("tanggal_mulai", today).gte("tanggal_selesai", today),
+    ]);
+    setSesiList(sesi || []);
+    setPeriodeAktif((periodes && periodes[0]) || null);
+    if (sesi && sesi.length) {
+      const ids = sesi.map(s => s.id);
+      const { data: respon } = await sb.from("madani_survei_respon").select("*").in("sesi_id", ids);
+      const agg = {};
+      ids.forEach(id => { agg[id] = { n: 0, totalYa: 0 }; });
+      (respon || []).forEach(r => {
+        agg[r.sesi_id].n += 1;
+        agg[r.sesi_id].totalYa += [r.q1, r.q2, r.q3, r.q4, r.q5, r.q6, r.q7, r.q8].filter(Boolean).length;
+      });
+      Object.keys(agg).forEach(id => {
+        const { n, totalYa } = agg[id];
+        agg[id].pct = n > 0 ? ((totalYa / (n * 8)) * 100).toFixed(1) : "-";
+      });
+      setResponCount(agg);
+      const active = (sesi || []).find(s => s.status === "open");
+      if (active) {
+        const { data: tokens } = await sb.from("madani_survei_token").select("*").eq("sesi_id", active.id).order("created_at");
+        setTokenList(tokens || []);
+      } else {
+        setTokenList([]);
+      }
+    }
+    setLoading(false);
+  }, [profile.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function createSesi() {
+    if (!periodeAktif) return;
+    setCreating(true);
+    const kode = genKode();
+    const { error } = await sb.from("madani_survei_sesi").insert({
+      madrasah_id: madrasah.id, guru_id: profile.id, kelas: profile.kelas, kode_sesi: kode, status: "open",
+      periode_survei_id: periodeAktif.id,
+    });
+    setCreating(false);
+    if (!error) load();
+  }
+
+  async function closeSesi(id) {
+    await sb.from("madani_survei_sesi").update({ status: "closed", closed_at: new Date().toISOString() }).eq("id", id);
+    load();
+  }
+
+  async function generateToken(sesiId) {
+    const n = parseInt(jumlahToken, 10);
+    if (!n || n < 1 || n > 200) { alert("Masukkan jumlah token 1-200."); return; }
+    setGeneratingToken(true);
+    const rows = [];
+    const used = new Set();
+    while (rows.length < n) {
+      const t = genRandomCode(null, 6);
+      if (used.has(t)) continue;
+      used.add(t);
+      rows.push({ sesi_id: sesiId, token: t });
+    }
+    const { error } = await sb.from("madani_survei_token").insert(rows);
+    setGeneratingToken(false);
+    if (error) { alert("Gagal membuat token: " + error.message); return; }
+    setJumlahToken("");
+    load();
+  }
+
+  function cetakToken(sesi) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Token Survei Rasa Aman — Kelas ${sesi.kelas} (${sesi.kode_sesi})`, 10, 10);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Gunting per kotak, kocok, bagikan acak ke siswa. 1 token = 1 kali isi survei.", 10, 15);
+
+    const cols = 5, cellW = 37, cellH = 20, startX = 10, startY = 22;
+    tokenList.forEach((t, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const x = startX + col * cellW, y = startY + row * cellH;
+      if (y > 280) return; // batasi 1 halaman biar sederhana; kalau lebih, sisanya tetap tersimpan di sistem
+      doc.setDrawColor(180);
+      doc.setLineDash([1, 1]);
+      doc.rect(x, y, cellW - 2, cellH - 4);
+      doc.setLineDash([]);
+      doc.setFont("courier", "bold");
+      doc.setFontSize(13);
+      doc.text(t.token, x + (cellW - 2) / 2, y + (cellH - 4) / 2 + 2, { align: "center" });
+    });
+    doc.save(`Token_Survei_${sesi.kode_sesi}.pdf`);
+  }
+
+  async function hapusTokenBelumDipakai(sesiId) {
+    if (!window.confirm("Hapus semua token yang belum dipakai untuk sesi ini? Token yang sudah dipakai tidak akan terhapus.")) return;
+    const { error } = await sb.from("madani_survei_token").delete().eq("sesi_id", sesiId).is("used_at", null);
+    if (!error) load();
+  }
+
+  async function deleteSesi(s) {
+    const n = responCount[s.id]?.n || 0;
+    const warn = n > 0 ? ` Ada ${n} jawaban siswa yang akan ikut terhapus.` : "";
+    if (!window.confirm(`Hapus sesi "${s.kode_sesi}"?${warn} Tindakan ini tidak bisa dibatalkan.`)) return;
+    const { error } = await sb.from("madani_survei_sesi").delete().eq("id", s.id);
+    if (!error) load();
+  }
+
+  const activeSesi = sesiList.find(s => s.status === "open");
+
+  if (loading) return <div className="card">Memuat...</div>;
+
+  return (
+    <div>
+      <div className="card">
+        <h2>Sesi Survei Rasa Aman — Kelas {profile.kelas}</h2>
+        <p className="small-muted">Buat sesi, lalu bagikan kode/link ke siswa. Siswa mengisi LANGSUNG dan anonim lewat HP masing-masing, atau bergiliran di 1 laptop (mode kios — form otomatis kosong lagi setelah tiap siswa submit).</p>
+
+        {activeSesi ? (
+          <div className="session-box">
+            <div className="small-muted">Sesi aktif — dibuat {new Date(activeSesi.created_at).toLocaleString("id-ID")}</div>
+            <div className="kode">{activeSesi.kode_sesi}</div>
+            <div className="link-box">{surveyUrl(activeSesi.kode_sesi)}</div>
+            <img src={"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" + encodeURIComponent(surveyUrl(activeSesi.kode_sesi))} alt="QR kode survei" width="180" height="180" />
+            <div style={{ marginTop: 12 }}>
+              <span className="badge ok">{responCount[activeSesi.id]?.n || 0} siswa sudah mengisi</span>
+              {" "}
+              <span className="badge neutral">{responCount[activeSesi.id]?.pct !== undefined ? responCount[activeSesi.id].pct + "% rasa aman" : ""}</span>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <button className="btn secondary" onClick={load}>Refresh</button>{" "}
+              <button className="btn danger" onClick={() => closeSesi(activeSesi.id)}>Tutup Sesi</button>
+            </div>
+
+            <div style={{marginTop:20,paddingTop:16,borderTop:"2px solid #fff",textAlign:"left"}}>
+              <div style={{fontWeight:700,fontSize:14,color:"var(--primary-dark)",marginBottom:4}}>Token Sekali Pakai (wajib diisi siswa sebelum menjawab)</div>
+              <p className="small-muted" style={{marginBottom:10}}>Buat token sejumlah siswa di kelas, cetak, gunting, kocok, bagikan acak. Siswa harus masukkan token dulu sebelum bisa menjawab — 1 token cuma bisa dipakai 1 kali.</p>
+
+              {tokenList.length === 0 ? (
+                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                  <input type="number" min="1" max="200" placeholder="Jumlah siswa" value={jumlahToken} onChange={e=>setJumlahToken(e.target.value)} style={{width:120}} />
+                  <button className="btn" onClick={()=>generateToken(activeSesi.id)} disabled={generatingToken}>{generatingToken?"Membuat...":"Generate Token"}</button>
+                </div>
+              ) : (
+                <>
+                  <div style={{marginBottom:10}}>
+                    <span className="badge ok">{tokenList.filter(t=>t.used_at).length} terpakai</span>{" "}
+                    <span className="badge neutral">{tokenList.filter(t=>!t.used_at).length} belum terpakai</span>{" "}
+                    <span className="badge neutral">{tokenList.length} total</span>
+                  </div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <button className="btn secondary" onClick={()=>cetakToken(activeSesi)}>🖨 Cetak Lembar Token (PDF)</button>
+                    <button className="btn secondary" onClick={load}>Refresh Status Token</button>
+                    <button className="btn danger" onClick={()=>hapusTokenBelumDipakai(activeSesi.id)}>Hapus Token Belum Terpakai</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            {periodeAktif ? (
+              <>
+                <div className="small-muted" style={{marginBottom:8}}>Periode berjalan: <strong>{periodeAktif.nama}</strong> ({periodeAktif.tanggal_mulai} s/d {periodeAktif.tanggal_selesai})</div>
+                <button className="btn" onClick={createSesi} disabled={creating}>{creating ? "Membuat..." : "+ Buat Sesi Survei Baru"}</button>
+              </>
+            ) : (
+              <div className="setup-note">
+                {periodeAktif === undefined ? "Memeriksa periode survei..." : "Belum ada periode survei yang sedang berjalan. Hubungi Admin Kanwil untuk membuka periode survei (biasanya per semester) sebelum bisa membuat sesi baru."}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>Riwayat Sesi</h2>
+        {sesiList.filter(s => s.status === "closed").length === 0 ? <p className="small-muted">Belum ada sesi yang ditutup.</p> : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Kode</th><th>Jumlah Responden</th><th>% Rasa Aman</th><th>Aksi</th></tr></thead>
+              <tbody>
+                {sesiList.filter(s => s.status === "closed").map(s => (
+                  <tr key={s.id}>
+                    <td>{s.tanggal}</td>
+                    <td>{s.kode_sesi}</td>
+                    <td>{responCount[s.id]?.n || 0}</td>
+                    <td>{responCount[s.id]?.pct ?? "-"}{responCount[s.id]?.pct !== undefined && responCount[s.id]?.pct !== "-" ? "%" : ""}</td>
+                    <td><button className="btn danger" onClick={()=>deleteSesi(s)}>Hapus</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN: KELOLA MADRASAH
+// ---------------------------------------------------------------------
+function KelolaMadrasahPanel({ madrasahList, onChanged }) {
+  const emptyForm = { nama: "", nsm: "", kab_kota: KABKOTA_ACEH[0], jenjang: "MI", status_madrasah: "Negeri", nama_kepala: "", kode_akses: genRandomCode("MADANI", 6), pin: genPin(), kode_lapor: genRandomCode("LAPOR", 7) };
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterKab, setFilterKab] = useState("Semua");
+  const [filterStatus, setFilterStatus] = useState("Semua");
+  const [editId, setEditId] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+
+  function downloadTemplate() {
+    const contoh = [{
+      "Nama Madrasah": "MIN 1 Aceh Besar", "NSM": "111111060001", "Kab/Kota": "Aceh Besar",
+      "Jenjang (MI/MTs/MA)": "MI", "Status (Negeri/Swasta)": "Negeri", "Nama Kepala Madrasah": "Nama Kepala Madrasah",
+      "Kode Akses (kosongkan utk otomatis)": "", "PIN (kosongkan utk otomatis)": "",
+    }];
+    const wsData = XLSX.utils.json_to_sheet(contoh);
+    wsData["!cols"] = [{wch:28},{wch:16},{wch:18},{wch:18},{wch:16},{wch:26},{wch:28},{wch:22}];
+    const wsKab = XLSX.utils.aoa_to_sheet([["Daftar Kab/Kota yang Valid (salin persis ejaannya)"], ...KABKOTA_ACEH.map(k=>[k])]);
+    wsKab["!cols"] = [{wch:30}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, wsData, "Data Madrasah");
+    XLSX.utils.book_append_sheet(wb, wsKab, "Daftar Kab-Kota");
+    XLSX.writeFile(wb, "Template_Import_Madrasah_MADANI.xlsx");
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImporting(true); setImportResult(null);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+      const toInsert = [];
+      const errors = [];
+      rows.forEach((r, i) => {
+        const nama = String(r["Nama Madrasah"] || "").trim();
+        const kab = String(r["Kab/Kota"] || "").trim();
+        const jenjang = String(r["Jenjang (MI/MTs/MA)"] || "").trim().toUpperCase();
+        const statusRaw = String(r["Status (Negeri/Swasta)"] || "Negeri").trim();
+        const status = statusRaw.toLowerCase() === "swasta" ? "Swasta" : "Negeri";
+        const rowNum = i + 2; // +2 karena baris 1 = header, data mulai baris 2 di Excel
+        if (!nama) { errors.push(`Baris ${rowNum}: Nama Madrasah kosong, dilewati.`); return; }
+        if (!KABKOTA_ACEH.includes(kab)) { errors.push(`Baris ${rowNum} ("${nama}"): Kab/Kota "${kab}" tidak dikenali, dilewati. Lihat sheet "Daftar Kab-Kota".`); return; }
+        if (!["MI","MTS","MA"].includes(jenjang)) { errors.push(`Baris ${rowNum} ("${nama}"): Jenjang "${jenjang}" harus MI/MTs/MA, dilewati.`); return; }
+        toInsert.push({
+          nama, nsm: String(r["NSM"] || "").trim(), kab_kota: kab,
+          jenjang: jenjang === "MTS" ? "MTs" : jenjang,
+          status_madrasah: status,
+          nama_kepala: String(r["Nama Kepala Madrasah"] || "").trim(),
+          kode_akses: String(r["Kode Akses (kosongkan utk otomatis)"] || "").trim() || genRandomCode("MADANI", 6),
+          kode_lapor: genRandomCode("LAPOR", 7),
+          pin: String(r["PIN (kosongkan utk otomatis)"] || "").trim() || genPin(),
+        });
+      });
+
+      let successCount = 0;
+      for (const row of toInsert) {
+        const { error } = await sb.from("madani_madrasah").insert(row);
+        if (error) errors.push(`"${row.nama}": gagal disimpan (${error.message}).`);
+        else successCount++;
+      }
+
+      setImportResult({ total: rows.length, success: successCount, errors });
+      if (successCount > 0) onChanged();
+    } catch (err) {
+      setImportResult({ total: 0, success: 0, errors: ["Gagal membaca file: " + err.message + " — pastikan format .xlsx sesuai template."] });
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  }
+
+  async function submitNew(e) {
+    e.preventDefault();
+    setSaving(true); setMsg("");
+    const { error } = await sb.from("madani_madrasah").insert(form);
+    setSaving(false);
+    if (error) {
+      setMsg("Gagal: " + error.message + (error.message.includes("duplicate") ? " (coba klik ulang kode akses)" : ""));
+    } else {
+      setMsg(`Tersimpan. Kode akses: ${form.kode_akses} — PIN: ${form.pin} (catat/salin untuk diberikan ke kepala madrasah)`);
+      setForm({ ...emptyForm, kode_akses: genRandomCode("MADANI", 6), pin: genPin(), kode_lapor: genRandomCode("LAPOR", 7) });
+      onChanged();
+    }
+  }
+
+  async function resetPin(m) {
+    if (!window.confirm(`Reset PIN untuk "${m.nama}"?`)) return;
+    const newPin = genPin();
+    const { error } = await sb.from("madani_madrasah").update({ pin: newPin }).eq("id", m.id);
+    if (!error) { alert(`PIN baru untuk ${m.nama}: ${newPin}\n\nCatat/sampaikan ke kepala madrasah — PIN lama tidak berlaku lagi.`); onChanged(); }
+  }
+
+  async function hapus(m) {
+    if (!window.confirm(`Hapus "${m.nama}"? Semua checklist, sesi survei, dan data kasus terkait madrasah ini akan ikut terhapus. Tindakan ini tidak bisa dibatalkan.`)) return;
+    const { error } = await sb.from("madani_madrasah").delete().eq("id", m.id);
+    if (!error) onChanged();
+  }
+
+  function startEdit(m) {
+    setEditId(m.id);
+    setEditForm({ nama: m.nama, nsm: m.nsm || "", kab_kota: m.kab_kota, jenjang: m.jenjang, status_madrasah: m.status_madrasah || "Negeri", nama_kepala: m.nama_kepala || "" });
+  }
+  async function saveEdit(id) {
+    const { error } = await sb.from("madani_madrasah").update(editForm).eq("id", id);
+    if (!error) { setEditId(null); onChanged(); }
+  }
+
+  const filtered = madrasahList.filter(m =>
+    (filterKab === "Semua" || m.kab_kota === filterKab) &&
+    (filterStatus === "Semua" || m.status_madrasah === filterStatus) &&
+    (search === "" || m.nama.toLowerCase().includes(search.toLowerCase()) || (m.nsm||"").includes(search))
+  );
+
+  return (
+    <div>
+      <div className="card">
+        <h2>Import Massal dari Excel</h2>
+        <p className="small-muted">Cocok untuk mendaftarkan banyak madrasah sekaligus (misalnya seluruh madrasah di 1 kab/kota).</p>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+          <button className="btn secondary" type="button" onClick={downloadTemplate}>⬇ Unduh Template Excel</button>
+          <label className="btn" style={{cursor:"pointer",margin:0}}>
+            {importing ? "Memproses..." : "⬆ Upload File Excel Terisi"}
+            <input type="file" accept=".xlsx,.xls" onChange={handleImportFile} disabled={importing} style={{display:"none"}} />
+          </label>
+        </div>
+        {importResult && (
+          <div style={{marginTop:14}}>
+            <div className={"badge " + (importResult.success > 0 ? "ok" : "danger")}>
+              {importResult.success} dari {importResult.total} baris berhasil diimpor
+            </div>
+            {importResult.errors.length > 0 && (
+              <div style={{marginTop:10}}>
+                <div className="small-muted" style={{fontWeight:700,marginBottom:4}}>Catatan/masalah ({importResult.errors.length}):</div>
+                <div style={{maxHeight:150,overflowY:"auto",fontSize:12,color:"var(--danger)"}}>
+                  {importResult.errors.map((e,i) => <div key={i} style={{marginBottom:2}}>• {e}</div>)}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>+ Tambah Madrasah Baru (Satu per Satu)</h2>
+        <form onSubmit={submitNew}>
+          <div className="grid2">
+            <div><label>Nama Madrasah</label><input type="text" value={form.nama} onChange={e=>setForm(f=>({...f,nama:e.target.value}))} required /></div>
+            <div><label>NSM</label><input type="text" value={form.nsm} onChange={e=>setForm(f=>({...f,nsm:e.target.value}))} /></div>
+            <div><label>Kab/Kota</label>
+              <select value={form.kab_kota} onChange={e=>setForm(f=>({...f,kab_kota:e.target.value}))}>
+                {KABKOTA_ACEH.map(k=><option key={k}>{k}</option>)}
+              </select>
+            </div>
+            <div><label>Jenjang</label>
+              <select value={form.jenjang} onChange={e=>setForm(f=>({...f,jenjang:e.target.value}))}>
+                <option>MI</option><option>MTs</option><option>MA</option>
+              </select>
+            </div>
+            <div><label>Status</label>
+              <select value={form.status_madrasah} onChange={e=>setForm(f=>({...f,status_madrasah:e.target.value}))}>
+                <option>Negeri</option><option>Swasta</option>
+              </select>
+            </div>
+            <div><label>Nama Kepala Madrasah</label><input type="text" value={form.nama_kepala} onChange={e=>setForm(f=>({...f,nama_kepala:e.target.value}))} /></div>
+          </div>
+          <div className="grid2" style={{marginTop:12}}>
+            <div><label>Kode Akses (otomatis, boleh diubah)</label><input type="text" value={form.kode_akses} onChange={e=>setForm(f=>({...f,kode_akses:e.target.value}))} required /></div>
+            <div><label>PIN (otomatis, boleh diubah)</label><input type="text" value={form.pin} onChange={e=>setForm(f=>({...f,pin:e.target.value}))} required /></div>
+          </div>
+          <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center"}}>
+            <button className="btn" type="submit" disabled={saving}>{saving?"Menyimpan...":"Simpan Madrasah"}</button>
+            {msg && <span className="small-muted">{msg}</span>}
+          </div>
+        </form>
+      </div>
+
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10,marginBottom:12}}>
+          <h2 style={{border:"none",margin:0}}>Daftar Madrasah ({filtered.length})</h2>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <input type="text" placeholder="Cari nama/NSM..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:180}} />
+            <select value={filterKab} onChange={e=>setFilterKab(e.target.value)} style={{width:180}}>
+              <option>Semua</option>
+              {KABKOTA_ACEH.map(k=><option key={k}>{k}</option>)}
+            </select>
+            <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{width:130}}>
+              <option>Semua</option>
+              <option>Negeri</option>
+              <option>Swasta</option>
+            </select>
+          </div>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Nama</th><th>Kab/Kota</th><th>Jenjang</th><th>Status</th><th>Kode Akses</th><th>PIN</th><th>Aksi</th></tr></thead>
+            <tbody>
+              {filtered.map(m => (
+                <tr key={m.id}>
+                  {editId === m.id ? (
+                    <>
+                      <td><input type="text" value={editForm.nama} onChange={e=>setEditForm(f=>({...f,nama:e.target.value}))} /></td>
+                      <td>
+                        <select value={editForm.kab_kota} onChange={e=>setEditForm(f=>({...f,kab_kota:e.target.value}))}>
+                          {KABKOTA_ACEH.map(k=><option key={k}>{k}</option>)}
+                        </select>
+                      </td>
+                      <td>
+                        <select value={editForm.jenjang} onChange={e=>setEditForm(f=>({...f,jenjang:e.target.value}))}>
+                          <option>MI</option><option>MTs</option><option>MA</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select value={editForm.status_madrasah} onChange={e=>setEditForm(f=>({...f,status_madrasah:e.target.value}))}>
+                          <option>Negeri</option><option>Swasta</option>
+                        </select>
+                      </td>
+                      <td colSpan={2}>{m.kode_akses}</td>
+                      <td>
+                        <button className="btn" onClick={()=>saveEdit(m.id)}>Simpan</button>{" "}
+                        <button className="btn secondary" onClick={()=>setEditId(null)}>Batal</button>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{m.nama}</td>
+                      <td>{m.kab_kota}</td>
+                      <td>{m.jenjang}</td>
+                      <td><span className={"badge " + (m.status_madrasah === "Swasta" ? "warn" : "neutral")}>{m.status_madrasah || "Negeri"}</span></td>
+                      <td>{m.kode_akses}</td>
+                      <td>{m.pin}</td>
+                      <td>
+                        <button className="btn secondary" onClick={()=>startEdit(m)}>Edit</button>{" "}
+                        <button className="btn secondary" onClick={()=>resetPin(m)}>Reset PIN</button>{" "}
+                        <button className="btn danger" onClick={()=>hapus(m)}>Hapus</button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN: KELOLA GURU / WALI KELAS
+// ---------------------------------------------------------------------
+function KelolaGuruPanel({ guruList, madrasahList, onChanged }) {
+  const emptyForm = { madrasah_id: madrasahList[0]?.id || "", nama: "", kelas: "", kode_akses: genRandomCode("GURU", 6), pin: genPin() };
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!form.madrasah_id && madrasahList.length) setForm(f => ({ ...f, madrasah_id: madrasahList[0].id }));
+  }, [madrasahList]);
+
+  async function submitNew(e) {
+    e.preventDefault();
+    if (!form.madrasah_id) { setMsg("Tambahkan madrasah dulu sebelum menambah guru."); return; }
+    setSaving(true); setMsg("");
+    const { error } = await sb.from("madani_guru").insert(form);
+    setSaving(false);
+    if (error) {
+      setMsg("Gagal: " + error.message);
+    } else {
+      setMsg(`Tersimpan. Kode akses: ${form.kode_akses} — PIN: ${form.pin} (catat/salin untuk diberikan ke wali kelas)`);
+      setForm(f => ({ ...emptyForm, madrasah_id: f.madrasah_id, kode_akses: genRandomCode("GURU", 6), pin: genPin() }));
+      onChanged();
+    }
+  }
+
+  async function resetPin(g) {
+    if (!window.confirm(`Reset PIN untuk "${g.nama}"?`)) return;
+    const newPin = genPin();
+    const { error } = await sb.from("madani_guru").update({ pin: newPin }).eq("id", g.id);
+    if (!error) { alert(`PIN baru untuk ${g.nama}: ${newPin}\n\nCatat/sampaikan ke wali kelas — PIN lama tidak berlaku lagi.`); onChanged(); }
+  }
+
+  async function hapus(g) {
+    if (!window.confirm(`Hapus akun "${g.nama}"? Sesi survei yang pernah dibuat guru ini tetap tersimpan, hanya akunnya yang hilang.`)) return;
+    const { error } = await sb.from("madani_guru").delete().eq("id", g.id);
+    if (!error) onChanged();
+  }
+
+  const filtered = guruList.filter(g =>
+    search === "" || g.nama.toLowerCase().includes(search.toLowerCase()) || (g.madani_madrasah?.nama||"").toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <div className="card">
+        <h2>+ Tambah Guru/Wali Kelas Baru</h2>
+        {madrasahList.length === 0 ? <p className="small-muted">Tambahkan madrasah dulu di tab "Kelola Madrasah" sebelum menambah guru.</p> : (
+          <form onSubmit={submitNew}>
+            <div className="grid2">
+              <div>
+                <label>Madrasah</label>
+                <select value={form.madrasah_id} onChange={e=>setForm(f=>({...f,madrasah_id:e.target.value}))} required>
+                  {madrasahList.map(m => <option key={m.id} value={m.id}>{m.nama} ({m.kab_kota})</option>)}
+                </select>
+              </div>
+              <div><label>Nama Guru</label><input type="text" value={form.nama} onChange={e=>setForm(f=>({...f,nama:e.target.value}))} required /></div>
+              <div><label>Kelas (contoh: IV-A)</label><input type="text" value={form.kelas} onChange={e=>setForm(f=>({...f,kelas:e.target.value}))} required /></div>
+            </div>
+            <div className="grid2" style={{marginTop:12}}>
+              <div><label>Kode Akses (otomatis, boleh diubah)</label><input type="text" value={form.kode_akses} onChange={e=>setForm(f=>({...f,kode_akses:e.target.value}))} required /></div>
+              <div><label>PIN (otomatis, boleh diubah)</label><input type="text" value={form.pin} onChange={e=>setForm(f=>({...f,pin:e.target.value}))} required /></div>
+            </div>
+            <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center"}}>
+              <button className="btn" type="submit" disabled={saving}>{saving?"Menyimpan...":"Simpan Guru"}</button>
+              {msg && <span className="small-muted">{msg}</span>}
+            </div>
+          </form>
+        )}
+      </div>
+
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:10,marginBottom:12}}>
+          <h2 style={{border:"none",margin:0}}>Daftar Guru/Wali Kelas ({filtered.length})</h2>
+          <input type="text" placeholder="Cari nama guru/madrasah..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:220}} />
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Nama</th><th>Madrasah</th><th>Kelas</th><th>Kode Akses</th><th>PIN</th><th>Aksi</th></tr></thead>
+            <tbody>
+              {filtered.map(g => (
+                <tr key={g.id}>
+                  <td>{g.nama}</td>
+                  <td>{g.madani_madrasah?.nama || "-"}</td>
+                  <td>{g.kelas}</td>
+                  <td>{g.kode_akses}</td>
+                  <td>{g.pin}</td>
+                  <td>
+                    <button className="btn secondary" onClick={()=>resetPin(g)}>Reset PIN</button>{" "}
+                    <button className="btn danger" onClick={()=>hapus(g)}>Hapus</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN: KELOLA PERIODE SURVEI (jendela waktu per semester)
+// ---------------------------------------------------------------------
+function PeriodeSurveiPanel() {
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const emptyForm = { nama: "", tanggal_mulai: "", tanggal_selesai: "" };
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await sb.from("madani_periode_survei").select("*").order("tanggal_mulai", { ascending: false });
+    setList(data || []);
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function submitNew(e) {
+    e.preventDefault();
+    if (new Date(form.tanggal_selesai) < new Date(form.tanggal_mulai)) {
+      setMsg("Tanggal selesai tidak boleh sebelum tanggal mulai.");
+      return;
+    }
+    setSaving(true); setMsg("");
+    const { error } = await sb.from("madani_periode_survei").insert({ ...form, is_active: true });
+    setSaving(false);
+    setMsg(error ? "Gagal: " + error.message : "Periode tersimpan.");
+    if (!error) { setForm(emptyForm); load(); }
+  }
+
+  async function toggleActive(p) {
+    await sb.from("madani_periode_survei").update({ is_active: !p.is_active }).eq("id", p.id);
+    load();
+  }
+  async function hapus(p) {
+    if (!window.confirm(`Hapus periode "${p.nama}"? Sesi survei yang sudah dibuat pada periode ini tetap tersimpan, hanya penandaan periodenya yang hilang.`)) return;
+    const { error } = await sb.from("madani_periode_survei").delete().eq("id", p.id);
+    if (!error) load();
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  const isCurrentlyOpen = (p) => p.is_active && p.tanggal_mulai <= today && today <= p.tanggal_selesai;
+
+  if (loading) return <div className="card">Memuat...</div>;
+
+  return (
+    <div>
+      <div className="card">
+        <h2>+ Buka Periode Survei Baru</h2>
+        <p className="small-muted">Selama tanggal hari ini berada dalam salah satu periode aktif, wali kelas se-Aceh bisa membuat sesi survei. Di luar itu, tombol "Buat Sesi Survei Baru" akan terkunci otomatis. Disarankan 2x setahun (per semester).</p>
+        <form onSubmit={submitNew}>
+          <div className="grid2">
+            <div><label>Nama Periode</label><input type="text" value={form.nama} onChange={e=>setForm(f=>({...f,nama:e.target.value}))} placeholder="contoh: Semester Ganjil 2026/2027" required /></div>
+            <div></div>
+            <div><label>Tanggal Mulai</label><input type="date" value={form.tanggal_mulai} onChange={e=>setForm(f=>({...f,tanggal_mulai:e.target.value}))} required /></div>
+            <div><label>Tanggal Selesai</label><input type="date" value={form.tanggal_selesai} onChange={e=>setForm(f=>({...f,tanggal_selesai:e.target.value}))} required /></div>
+          </div>
+          <div style={{marginTop:14,display:"flex",gap:10,alignItems:"center"}}>
+            <button className="btn" type="submit" disabled={saving}>{saving?"Menyimpan...":"Buka Periode"}</button>
+            {msg && <span className="small-muted">{msg}</span>}
+          </div>
+        </form>
+      </div>
+
+      <div className="card">
+        <h2>Daftar Periode</h2>
+        {list.length === 0 ? <p className="small-muted">Belum ada periode dibuat. Selama belum ada, wali kelas TIDAK BISA membuat sesi survei.</p> : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Nama</th><th>Mulai</th><th>Selesai</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody>
+                {list.map(p => (
+                  <tr key={p.id}>
+                    <td>{p.nama}</td>
+                    <td>{p.tanggal_mulai}</td>
+                    <td>{p.tanggal_selesai}</td>
+                    <td>
+                      {isCurrentlyOpen(p)
+                        ? <span className="badge ok">Sedang Berjalan</span>
+                        : p.is_active
+                          ? <span className="badge neutral">Aktif (di luar rentang tanggal)</span>
+                          : <span className="badge danger">Dinonaktifkan</span>}
+                    </td>
+                    <td>
+                      <button className="btn secondary" onClick={()=>toggleActive(p)}>{p.is_active ? "Nonaktifkan" : "Aktifkan"}</button>{" "}
+                      <button className="btn danger" onClick={()=>hapus(p)}>Hapus</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN: TREN & ANALITIK (grafik, bukan cuma snapshot hari ini)
+// ---------------------------------------------------------------------
+function useChart(canvasRef, config, deps) {
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const chart = new Chart(canvasRef.current, config);
+    return () => chart.destroy();
+    // eslint-disable-next-line
+  }, deps);
+}
+
+function TrenAnalitikPanel({ sesiAll, responAll, madrasahList, checklists, rekapStatus }) {
+  const [periodeList, setPeriodeList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const trenRef = useRef(null);
+  const statusRef = useRef(null);
+  const negeriSwastaRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await sb.from("madani_periode_survei").select("*").order("tanggal_mulai");
+      setPeriodeList(data || []);
+      setLoading(false);
+    })();
+  }, []);
+
+  const trenData = useMemo(() => {
+    return periodeList.map(p => {
+      const sesiIds = sesiAll.filter(s => s.periode_survei_id === p.id).map(s => s.id);
+      const rs = responAll.filter(r => sesiIds.includes(r.sesi_id));
+      const totalYa = rs.reduce((a,r)=>a+[r.q1,r.q2,r.q3,r.q4,r.q5,r.q6,r.q7,r.q8].filter(Boolean).length,0);
+      const pct = rs.length > 0 ? (totalYa/(rs.length*8))*100 : null;
+      return { label: p.nama, pct, n: rs.length };
+    });
+  }, [periodeList, sesiAll, responAll]);
+
+  const statusData = useMemo(() => {
+    const ids = madrasahList.map(m => m.id);
+    const cks = checklists.filter(c => ids.includes(c.madrasah_id));
+    const statuses = cks.map(statusFromChecklist);
+    const lengkap = statuses.filter(s=>s==="Lengkap").length;
+    const sebagian = statuses.filter(s=>s==="Sebagian").length;
+    const belum = madrasahList.length - cks.length + statuses.filter(s=>s==="Belum Dimulai").length;
+    return { lengkap, sebagian, belum };
+  }, [madrasahList, checklists]);
+
+  useChart(trenRef, {
+    type: "line",
+    data: {
+      labels: trenData.map(d => d.label),
+      datasets: [{
+        label: "% Siswa Merasa Aman",
+        data: trenData.map(d => d.pct),
+        borderColor: "#0f5132", backgroundColor: "rgba(15,81,50,0.12)",
+        tension: 0.25, fill: true, spanGaps: true,
+      }],
+    },
+    options: { responsive: true, scales: { y: { min: 0, max: 100, ticks: { callback: v => v + "%" } } }, plugins: { legend: { display: false } } },
+  }, [trenData]);
+
+  useChart(statusRef, {
+    type: "doughnut",
+    data: {
+      labels: ["Lengkap", "Sebagian", "Belum Dimulai"],
+      datasets: [{ data: [statusData.lengkap, statusData.sebagian, statusData.belum], backgroundColor: ["#0f5132", "#d4a017", "#b3261e"] }],
+    },
+    options: { responsive: true, plugins: { legend: { position: "bottom" } } },
+  }, [statusData]);
+
+  useChart(negeriSwastaRef, {
+    type: "bar",
+    data: {
+      labels: ["Negeri", "Swasta"],
+      datasets: [
+        { label: "Lengkap", data: rekapStatus.map(r=>r.lengkap), backgroundColor: "#0f5132" },
+        { label: "Sebagian", data: rekapStatus.map(r=>r.sebagian), backgroundColor: "#d4a017" },
+        { label: "Belum", data: rekapStatus.map(r=>r.belum), backgroundColor: "#b3261e" },
+      ],
+    },
+    options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } },
+  }, [rekapStatus]);
+
+  if (loading) return <div className="card">Memuat data tren...</div>;
+
+  return (
+    <div>
+      <div className="card">
+        <h2>Tren % Rasa Aman Antar Periode</h2>
+        {periodeList.length === 0 ? (
+          <p className="small-muted">Belum ada periode survei dibuat. Buka periode dulu di tab "Periode Survei" supaya data bisa dikelompokkan per semester.</p>
+        ) : (
+          <div style={{maxWidth:700}}><canvas ref={trenRef}></canvas></div>
+        )}
+      </div>
+      <div className="grid2">
+        <div className="card">
+          <h2>Status Implementasi Keseluruhan</h2>
+          <div style={{maxWidth:320,margin:"0 auto"}}><canvas ref={statusRef}></canvas></div>
+        </div>
+        <div className="card">
+          <h2>Negeri vs Swasta</h2>
+          <canvas ref={negeriSwastaRef}></canvas>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN: LAPORAN EKSEKUTIF (PDF siap cetak/tanda tangan)
+// ---------------------------------------------------------------------
+function LaporanEksekutifPanel({ totals, rekapKabKota, rekapStatus }) {
+  const [generating, setGenerating] = useState(false);
+
+  function generatePdf() {
+    setGenerating(true);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("KEMENTERIAN AGAMA REPUBLIK INDONESIA", 105, 15, { align: "center" });
+    doc.text("KANTOR WILAYAH PROVINSI ACEH", 105, 21, { align: "center" });
+    doc.setFontSize(11);
+    doc.text("BIDANG PENDIDIKAN MADRASAH", 105, 27, { align: "center" });
+    doc.setLineWidth(0.5);
+    doc.line(15, 31, 195, 31);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("LAPORAN REKAPITULASI IMPLEMENTASI", 105, 40, { align: "center" });
+    doc.text("Madrasah sebagai Ruang Pendidikan yang Aman, Ramah, Inklusif, dan Penuh Kasih", 105, 46, { align: "center", maxWidth: 170 });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Berdasarkan SE Dirjen Pendidikan Islam No. B-81/Dt.I.II/KP.02/09/2026 — dicetak melalui aplikasi MADANI", 105, 53, { align: "center" });
+    doc.text("Tanggal cetak: " + today, 105, 58, { align: "center" });
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Ringkasan Provinsi Aceh", 15, 68);
+
+    doc.autoTable({
+      startY: 72,
+      head: [["Indikator", "Jumlah"]],
+      body: [
+        ["Total Madrasah Terdaftar", String(totals.jumlahMadrasah)],
+        ["Sudah Sosialisasi SE", String(totals.sosialisasi)],
+        ["Status Implementasi: Lengkap", String(totals.lengkap)],
+        ["Status Implementasi: Sebagian", String(totals.sebagian)],
+        ["Status Implementasi: Belum Dimulai", String(totals.belum)],
+        ["Total Kasus Tercatat", String(totals.totalKasus) + " (selesai: " + totals.kasusSelesai + ")"],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [15, 81, 50] },
+      styles: { fontSize: 9 },
+      margin: { left: 15, right: 15 },
+    });
+
+    let y = doc.lastAutoTable.finalY + 10;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Rekapitulasi per Kabupaten/Kota", 15, y);
+
+    doc.autoTable({
+      startY: y + 4,
+      head: [["Kab/Kota", "Madrasah", "Sosialisasi", "TPPK", "Lengkap", "Sebagian", "Belum", "% Aman", "Kasus"]],
+      body: rekapKabKota.map(r => [
+        r.kab, String(r.jumlahMadrasah), `${r.sosialisasi}/${r.jumlahMadrasah}`, `${r.tppk}/${r.jumlahMadrasah}`,
+        String(r.lengkap), String(r.sebagian), String(r.belum),
+        r.pctAman === "-" ? "-" : r.pctAman + "%", `${r.kasusSelesai}/${r.totalKasus}`,
+      ]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 81, 50] },
+      styles: { fontSize: 7.5 },
+      margin: { left: 15, right: 15 },
+    });
+
+    y = doc.lastAutoTable.finalY + 10;
+    if (y > 250) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Perbandingan Negeri vs Swasta", 15, y);
+    doc.autoTable({
+      startY: y + 4,
+      head: [["Status", "Jumlah", "Lengkap", "Sebagian", "Belum", "% Aman", "Kasus"]],
+      body: rekapStatus.map(r => [r.status, String(r.jumlah), String(r.lengkap), String(r.sebagian), String(r.belum), r.pctAman === "-" ? "-" : r.pctAman + "%", String(r.totalKasus)]),
+      theme: "grid",
+      headStyles: { fillColor: [15, 81, 50] },
+      styles: { fontSize: 8.5 },
+      margin: { left: 15, right: 15 },
+    });
+
+    y = doc.lastAutoTable.finalY + 25;
+    if (y > 260) { doc.addPage(); y = 30; }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Kepala Bidang Pendidikan Madrasah,", 130, y);
+    doc.text("_____________________________", 130, y + 25);
+    doc.text("NIP.", 130, y + 30);
+
+    doc.save(`Laporan_MADANI_${new Date().toISOString().slice(0,10)}.pdf`);
+    setGenerating(false);
+  }
+
+  return (
+    <div className="card">
+      <h2>Laporan Eksekutif</h2>
+      <p className="small-muted">Ringkasan rekap SELURUH PROVINSI saat ini (data langsung dari database, bukan snapshot lama), diformat siap cetak dan diajukan untuk tanda tangan Kabid.</p>
+      <button className="btn" onClick={generatePdf} disabled={generating}>{generating ? "Membuat PDF..." : "⬇ Unduh Laporan PDF"}</button>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// ADMIN KANWIL DASHBOARD
+// ---------------------------------------------------------------------
+function AdminDashboard() {
+  const [tab, setTab] = useState("rekap");
+  const [loading, setLoading] = useState(true);
+  const [madrasahList, setMadrasahList] = useState([]);
+  const [guruList, setGuruList] = useState([]);
+  const [checklists, setChecklists] = useState([]);
+  const [sesiAll, setSesiAll] = useState([]);
+  const [responAll, setResponAll] = useState([]);
+  const [kasusAll, setKasusAll] = useState([]);
+  const [pengaduanAll, setPengaduanAll] = useState([]);
+  const [filterKab, setFilterKab] = useState("Semua");
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    const [{data:m},{data:g},{data:c},{data:sesi},{data:k},{data:pp}] = await Promise.all([
+      sb.from("madani_madrasah").select("*").order("nama"),
+      sb.from("madani_guru").select("*, madani_madrasah(nama)").order("nama"),
+      sb.from("madani_checklist").select("*"),
+      sb.from("madani_survei_sesi").select("*"),
+      sb.from("madani_kasus").select("*"),
+      sb.from("madani_pengaduan_publik").select("*"),
+    ]);
+    setMadrasahList(m||[]); setGuruList(g||[]); setChecklists(c||[]); setSesiAll(sesi||[]); setKasusAll(k||[]); setPengaduanAll(pp||[]);
+    if (sesi && sesi.length) {
+      const { data: respon } = await sb.from("madani_survei_respon").select("*").in("sesi_id", sesi.map(s=>s.id));
+      setResponAll(respon || []);
+    } else {
+      setResponAll([]);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const rekapKabKota = useMemo(() => {
+    return KABKOTA_ACEH.map(kk => {
+      const mds = madrasahList.filter(m => m.kab_kota === kk);
+      const ids = mds.map(m => m.id);
+      const cks = checklists.filter(c => ids.includes(c.madrasah_id));
+      const statuses = cks.map(statusFromChecklist);
+      const lengkap = statuses.filter(s=>s==="Lengkap").length;
+      const sebagian = statuses.filter(s=>s==="Sebagian").length;
+      const belum = mds.length - cks.length + statuses.filter(s=>s==="Belum Dimulai").length;
+      const sesiIds = sesiAll.filter(s => ids.includes(s.madrasah_id)).map(s => s.id);
+      const rs = responAll.filter(r => sesiIds.includes(r.sesi_id));
+      const totalSiswa = rs.length;
+      const totalYa = rs.reduce((a,r)=>a+[r.q1,r.q2,r.q3,r.q4,r.q5,r.q6,r.q7,r.q8].filter(Boolean).length,0);
+      const pctAman = totalSiswa>0 ? ((totalYa/(totalSiswa*8))*100).toFixed(1) : "-";
+      const ks = kasusAll.filter(k => ids.includes(k.madrasah_id));
+      const pp = pengaduanAll.filter(p => ids.includes(p.madrasah_id));
+      return {
+        kab: kk, jumlahMadrasah: mds.length, sosialisasi: cks.filter(c=>c.sosialisasi_dilaksanakan).length,
+        tppk: cks.filter(c=>c.tppk_dibentuk).length,
+        lengkap, sebagian, belum, totalKasus: ks.length, kasusSelesai: ks.filter(x=>x.status==="Selesai").length,
+        totalPengaduan: pp.length, pengaduanBaru: pp.filter(x=>x.status==="Baru").length,
+        pctAman,
+      };
+    });
+  }, [madrasahList, checklists, sesiAll, responAll, kasusAll, pengaduanAll]);
+
+  const rekapStatus = useMemo(() => {
+    return ["Negeri", "Swasta"].map(st => {
+      const mds = madrasahList.filter(m => (m.status_madrasah || "Negeri") === st);
+      const ids = mds.map(m => m.id);
+      const cks = checklists.filter(c => ids.includes(c.madrasah_id));
+      const statuses = cks.map(statusFromChecklist);
+      const lengkap = statuses.filter(s=>s==="Lengkap").length;
+      const sebagian = statuses.filter(s=>s==="Sebagian").length;
+      const belum = mds.length - cks.length + statuses.filter(s=>s==="Belum Dimulai").length;
+      const sesiIds = sesiAll.filter(s => ids.includes(s.madrasah_id)).map(s => s.id);
+      const rs = responAll.filter(r => sesiIds.includes(r.sesi_id));
+      const totalYa = rs.reduce((a,r)=>a+[r.q1,r.q2,r.q3,r.q4,r.q5,r.q6,r.q7,r.q8].filter(Boolean).length,0);
+      const pctAman = rs.length>0 ? ((totalYa/(rs.length*8))*100).toFixed(1) : "-";
+      const ks = kasusAll.filter(k => ids.includes(k.madrasah_id));
+      return { status: st, jumlah: mds.length, lengkap, sebagian, belum, pctAman, totalKasus: ks.length };
+    });
+  }, [madrasahList, checklists, sesiAll, responAll, kasusAll]);
+
+  const totals = useMemo(() => rekapKabKota.reduce((acc,r) => ({
+    jumlahMadrasah: acc.jumlahMadrasah + r.jumlahMadrasah,
+    sosialisasi: acc.sosialisasi + r.sosialisasi,
+    lengkap: acc.lengkap + r.lengkap,
+    sebagian: acc.sebagian + r.sebagian,
+    belum: acc.belum + r.belum,
+    totalKasus: acc.totalKasus + r.totalKasus,
+    kasusSelesai: acc.kasusSelesai + r.kasusSelesai,
+  }), {jumlahMadrasah:0,sosialisasi:0,lengkap:0,sebagian:0,belum:0,totalKasus:0,kasusSelesai:0}), [rekapKabKota]);
+
+  const displayed = filterKab === "Semua" ? rekapKabKota : rekapKabKota.filter(r=>r.kab===filterKab);
+
+  if (loading) return <div className="card">Memuat rekap seluruh provinsi...</div>;
+
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-box"><div className="num">{totals.jumlahMadrasah}</div><div className="lbl">Madrasah Terdaftar</div></div>
+        <div className="stat-box"><div className="num">{totals.lengkap}</div><div className="lbl">Status Lengkap</div></div>
+        <div className="stat-box"><div className="num">{totals.sebagian}</div><div className="lbl">Status Sebagian</div></div>
+        <div className="stat-box"><div className="num">{totals.totalKasus}</div><div className="lbl">Total Kasus Tercatat</div></div>
+      </div>
+
+      <div className="nav-tabs">
+        <button className={tab==="rekap"?"active":""} onClick={()=>setTab("rekap")}>Rekap Kab-Kota</button>
+        <button className={tab==="madrasah"?"active":""} onClick={()=>setTab("madrasah")}>Kelola Madrasah</button>
+        <button className={tab==="guru"?"active":""} onClick={()=>setTab("guru")}>Kelola Guru/Wali Kelas</button>
+        <button className={tab==="periode"?"active":""} onClick={()=>setTab("periode")}>Periode Survei</button>
+        <button className={tab==="tren"?"active":""} onClick={()=>setTab("tren")}>Tren & Analitik</button>
+        <button className={tab==="laporan"?"active":""} onClick={()=>setTab("laporan")}>Laporan Eksekutif</button>
+      </div>
+
+      {tab === "rekap" && (
+      <>
+      <div className="card">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+          <h2 style={{border:"none",margin:0}}>Rekap per Kabupaten/Kota</h2>
+          <select value={filterKab} onChange={e=>setFilterKab(e.target.value)} style={{width:220}}>
+            <option>Semua</option>
+            {KABKOTA_ACEH.map(k=><option key={k}>{k}</option>)}
+          </select>
+        </div>
+        <div className="table-wrap" style={{marginTop:14}}>
+          <table>
+            <thead>
+              <tr>
+                <th>Kab/Kota</th><th>Madrasah</th><th>Sosialisasi</th><th>TPPK Dibentuk</th>
+                <th>Lengkap</th><th>Sebagian</th><th>Belum</th>
+                <th>% Rasa Aman</th><th>Kasus (Selesai/Total)</th><th>Pengaduan Publik (Baru/Total)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayed.map(r=>(
+                <tr key={r.kab}>
+                  <td>{r.kab}</td>
+                  <td>{r.jumlahMadrasah}</td>
+                  <td>{r.sosialisasi}/{r.jumlahMadrasah}</td>
+                  <td>{r.tppk}/{r.jumlahMadrasah}</td>
+                  <td><span className="badge ok">{r.lengkap}</span></td>
+                  <td><span className="badge warn">{r.sebagian}</span></td>
+                  <td><span className="badge danger">{r.belum}</span></td>
+                  <td>{r.pctAman === "-" ? "-" : r.pctAman + "%"}</td>
+                  <td>{r.kasusSelesai}/{r.totalKasus}</td>
+                  <td>{r.pengaduanBaru}/{r.totalPengaduan}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>Perbandingan Negeri vs Swasta</h2>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Status</th><th>Jumlah Madrasah</th><th>Lengkap</th><th>Sebagian</th><th>Belum</th><th>% Rasa Aman</th><th>Total Kasus</th></tr></thead>
+            <tbody>
+              {rekapStatus.map(r => (
+                <tr key={r.status}>
+                  <td><span className={"badge " + (r.status === "Swasta" ? "warn" : "neutral")}>{r.status}</span></td>
+                  <td>{r.jumlah}</td>
+                  <td><span className="badge ok">{r.lengkap}</span></td>
+                  <td><span className="badge warn">{r.sebagian}</span></td>
+                  <td><span className="badge danger">{r.belum}</span></td>
+                  <td>{r.pctAman === "-" ? "-" : r.pctAman + "%"}</td>
+                  <td>{r.totalKasus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </>
+      )}
+
+      {tab === "madrasah" && <KelolaMadrasahPanel madrasahList={madrasahList} onChanged={loadAll} />}
+      {tab === "guru" && <KelolaGuruPanel guruList={guruList} madrasahList={madrasahList} onChanged={loadAll} />}
+      {tab === "periode" && <PeriodeSurveiPanel />}
+      {tab === "tren" && (
+        <TrenAnalitikPanel sesiAll={sesiAll} responAll={responAll} madrasahList={madrasahList} checklists={checklists} rekapStatus={rekapStatus} />
+      )}
+      {tab === "laporan" && (
+        <LaporanEksekutifPanel totals={totals} rekapKabKota={rekapKabKota} rekapStatus={rekapStatus} />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// APP ROOT
+// ---------------------------------------------------------------------
+function App() {
+  const [session, setSession] = useState(null);
+
+  const kodeSurvei = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("survei");
+  }, []);
+  const kodeLapor = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("lapor");
+  }, []);
+
+  if (kodeSurvei) return <StudentSurveyView kode={kodeSurvei} />;
+  if (kodeLapor) return <PublicComplaintView kode={kodeLapor} />;
+
+  if (!session) return <LoginScreen onLogin={setSession} />;
+
+  const roleLabel = { kepala: "Kepala Madrasah", guru: "Wali Kelas", admin: "Admin Kanwil" }[session.role];
+  const nameLabel = session.role === "admin" ? session.profile.nama
+    : session.role === "guru" ? `${session.profile.nama} (${session.profile.kelas})`
+    : session.profile.nama;
+
+  return (
+    <div className="app">
+      <header className="topbar">
+        <div>
+          <h1>MADANI</h1>
+          <div className="sub">{roleLabel} — {nameLabel}</div>
+        </div>
+        <button onClick={()=>setSession(null)}>Keluar</button>
+      </header>
+      <main>
+        {session.role === "kepala" && <KepalaDashboard profile={session.profile} />}
+        {session.role === "guru" && <GuruDashboard profile={session.profile} />}
+        {session.role === "admin" && <AdminDashboard />}
+      </main>
+      <div className="footer-note">MADANI · Bidang Pendidikan Madrasah, Kanwil Kemenag Provinsi Aceh</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      // gagal daftar (misal dibuka dari file:// lokal) - abaikan, aplikasi tetap jalan normal
+    });
+  });
+}
+</script>
+</body>
+</html>

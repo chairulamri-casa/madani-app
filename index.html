@@ -600,13 +600,20 @@ function KepalaDashboard({ profile }) {
     load();
   }
   async function eskalasiKeKasus(p) {
+    if (p.kasus_id) {
+      alert("Laporan ini sudah pernah dijadikan Kasus Resmi sebelumnya (tidak bisa diulang, walau status diubah manual). Cek kasusnya di tab Manajemen Kasus.");
+      return;
+    }
     if (!window.confirm("Jadikan laporan publik ini sebagai Kasus Resmi? Akan muncul di tab Manajemen Kasus untuk ditindaklanjuti.")) return;
-    const { error } = await sb.from("madani_kasus").insert({
+    const { data, error } = await sb.from("madani_kasus").insert({
       madrasah_id: profile.id, tanggal: p.tanggal_kejadian || new Date().toISOString().slice(0,10),
       kategori: p.kategori, status: "Baru",
       catatan_penanganan: "Berasal dari pengaduan publik: " + p.deskripsi.slice(0, 200),
-    });
-    if (!error) { await sb.from("madani_pengaduan_publik").update({ status: "Ditindaklanjuti" }).eq("id", p.id); load(); }
+    }).select().single();
+    if (!error && data) {
+      await sb.from("madani_pengaduan_publik").update({ status: "Ditindaklanjuti", kasus_id: data.id }).eq("id", p.id);
+      load();
+    }
   }
 
   async function regenerateKodeLapor() {
@@ -907,7 +914,9 @@ function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskala
                       </select>
                     </td>
                     <td>
-                      {p.status !== "Ditindaklanjuti" && (
+                      {p.kasus_id ? (
+                        <span className="badge ok">✓ Sudah Jadi Kasus</span>
+                      ) : (
                         <button className="btn secondary" onClick={()=>handleEskalasi(p)} disabled={!!escalatingIds[p.id]}>
                           {escalatingIds[p.id] ? "Memproses..." : "Jadikan Kasus Resmi"}
                         </button>

@@ -2080,7 +2080,23 @@ function AdminDashboard() {
 // APP ROOT
 // ---------------------------------------------------------------------
 function App() {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(() => {
+    try {
+      const saved = localStorage.getItem("madani_session");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  function handleLogin(newSession) {
+    setSession(newSession);
+    try { localStorage.setItem("madani_session", JSON.stringify(newSession)); } catch {}
+  }
+  function handleLogout() {
+    setSession(null);
+    try { localStorage.removeItem("madani_session"); } catch {}
+  }
 
   const kodeSurvei = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2094,7 +2110,7 @@ function App() {
   if (kodeSurvei) return <StudentSurveyView kode={kodeSurvei} />;
   if (kodeLapor) return <PublicComplaintView kode={kodeLapor} />;
 
-  if (!session) return <LoginScreen onLogin={setSession} />;
+  if (!session) return <LoginScreen onLogin={handleLogin} />;
 
   const roleLabel = { kepala: "Kepala Madrasah", guru: "Wali Kelas", admin: "Admin Kanwil" }[session.role];
   const nameLabel = session.role === "admin" ? session.profile.nama
@@ -2108,7 +2124,7 @@ function App() {
           <h1>MADANI</h1>
           <div className="sub">{roleLabel} — {nameLabel}</div>
         </div>
-        <button onClick={()=>setSession(null)}>Keluar</button>
+        <button onClick={handleLogout}>Keluar</button>
       </header>
       <main>
         {session.role === "kepala" && <KepalaDashboard profile={session.profile} />}

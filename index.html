@@ -589,6 +589,11 @@ function KepalaDashboard({ profile }) {
     await sb.from("madani_kasus").update({ status }).eq("id", id);
     load();
   }
+  async function deleteKasus(id) {
+    if (!window.confirm("Hapus catatan kasus ini? Tindakan ini tidak bisa dibatalkan.")) return;
+    const { error } = await sb.from("madani_kasus").delete().eq("id", id);
+    if (!error) load();
+  }
 
   async function updatePengaduanStatus(id, status) {
     await sb.from("madani_pengaduan_publik").update({ status }).eq("id", id);
@@ -734,7 +739,7 @@ function KepalaDashboard({ profile }) {
         </div>
       )}
 
-      {tab === "kasus" && <KasusPanel kasusList={kasusList} onAdd={addKasus} onUpdateStatus={updateKasusStatus} />}
+      {tab === "kasus" && <KasusPanel kasusList={kasusList} onAdd={addKasus} onUpdateStatus={updateKasusStatus} onDelete={deleteKasus} />}
       {tab === "pengaduan" && (
         <PengaduanPublikPanel
           profile={{ ...profile, kode_lapor: kodeLapor }}
@@ -854,6 +859,15 @@ function complaintUrl(kode) {
 
 function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskalasi, onRegenerate }) {
   const url = complaintUrl(profile.kode_lapor);
+  const [escalatingIds, setEscalatingIds] = useState({});
+
+  async function handleEskalasi(p) {
+    if (escalatingIds[p.id]) return; // sudah diproses, cegah klik ganda
+    setEscalatingIds(s => ({ ...s, [p.id]: true }));
+    await onEskalasi(p);
+    setEscalatingIds(s => ({ ...s, [p.id]: false }));
+  }
+
   return (
     <div>
       <div className="card">
@@ -894,7 +908,9 @@ function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskala
                     </td>
                     <td>
                       {p.status !== "Ditindaklanjuti" && (
-                        <button className="btn secondary" onClick={()=>onEskalasi(p)}>Jadikan Kasus Resmi</button>
+                        <button className="btn secondary" onClick={()=>handleEskalasi(p)} disabled={!!escalatingIds[p.id]}>
+                          {escalatingIds[p.id] ? "Memproses..." : "Jadikan Kasus Resmi"}
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -908,7 +924,7 @@ function PengaduanPublikPanel({ profile, pengaduanList, onUpdateStatus, onEskala
   );
 }
 
-function KasusPanel({ kasusList, onAdd, onUpdateStatus }) {
+function KasusPanel({ kasusList, onAdd, onUpdateStatus, onDelete }) {
   const [form, setForm] = useState({ tanggal: new Date().toISOString().slice(0,10), kategori: KASUS_KATEGORI[0], catatan_penanganan: "" });
   const [msg, setMsg] = useState("");
   async function submit(e) {
@@ -947,7 +963,7 @@ function KasusPanel({ kasusList, onAdd, onUpdateStatus }) {
         {kasusList.length === 0 ? <p className="small-muted">Alhamdulillah, belum ada kasus tercatat.</p> : (
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Catatan</th><th>Status</th></tr></thead>
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Catatan</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody>
                 {kasusList.map(k=>(
                   <tr key={k.id}>
@@ -959,6 +975,7 @@ function KasusPanel({ kasusList, onAdd, onUpdateStatus }) {
                         <option>Baru</option><option>Dalam Penanganan</option><option>Selesai</option>
                       </select>
                     </td>
+                    <td><button className="btn danger" onClick={()=>onDelete(k.id)}>Hapus</button></td>
                   </tr>
                 ))}
               </tbody>
